@@ -1,0 +1,2 @@
+NOTE_ID_COLUMN_NAME = "note_id"
+TAGS_COLUMN_NAME = "tags"
