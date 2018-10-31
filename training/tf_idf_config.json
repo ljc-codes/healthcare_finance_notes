@@ -1,0 +1,6 @@
+{
+    "max_df": 0.5,
+    "min_df": 5,
+    "max_features": 1000,
+    "ngram_range": [1, 2]
+}
