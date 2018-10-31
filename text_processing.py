@@ -53,6 +53,7 @@ def extract_text_snippets(tokenized_text, tag, window_size):
 
 def process_text(df,
                  window_size,
+                 training=False,
                  text_column_name=constants.TEXT_COLUMN_NAME,
                  tags_column_name=constants.TAGS_COLUMN_NAME,
                  financial_flag_column_name=constants.FINANCIAL_FLAG_COLUMN_NAME):
@@ -78,7 +79,12 @@ def process_text(df,
                                                   tag=tag,
                                                   window_size=window_size)
             for snippet in text_snippets:
-                data_point = {"tokenized_snippet": snippet, "y": row[financial_flag_column_name] * 1}
+                data_point = {"tokenized_snippet": snippet}
+
+                # add outcome if dataset being used for training
+                if training:
+                    data_point["y"] = row[financial_flag_column_name] * 1
+
                 labeled_data.append(data_point)
 
     labeled_df = pd.DataFrame(labeled_data)
