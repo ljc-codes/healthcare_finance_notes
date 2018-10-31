@@ -1,2 +1,4 @@
 NOTE_ID_COLUMN_NAME = "note_id"
 TAGS_COLUMN_NAME = "tags"
+TEXT_COLUMN_NAME = "text"
+FINANCIAL_FLAG_COLUMN_NAME = "financial_flag"
