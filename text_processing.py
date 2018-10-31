@@ -70,7 +70,7 @@ def process_text(df,
     labeled_data = []
 
     # get labeled data by looping through each row and extracting text snippets
-    for index, row in tqdm(df.iterrows()):
+    for index, row in tqdm(df.iterrows(), total=df.shape[0]):
 
         for tag in row[tags_column_name]:
             row["clean_text"] = clean_text(row[text_column_name])
