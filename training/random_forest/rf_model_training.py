@@ -52,6 +52,10 @@ def train_random_forest(data_path,
                         grid_search_config_path,
                         models_folder,
                         model_name):
+    """
+    Loads data, transforms it with tf-idf (training a new vectorizer if necessary), grid searches
+    over random forest hyperparameters for the best model, and saves the model as pickle object
+    """
     # get training set
     X_train, y_train = get_tf_idf_set(data_path=data_path,
                                       vectorizer_folder=vectorizer_folder,
@@ -67,6 +71,7 @@ def train_random_forest(data_path,
                               y_train=y_train,
                               model_parameters=model_parameters)
 
+    # create model folder if it does not exist
     if not os.path.exists(models_folder):
         os.makedirs(models_folder)
 
