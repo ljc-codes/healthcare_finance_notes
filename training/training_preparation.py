@@ -35,7 +35,8 @@ def fit_tf_idf(train_df,
 
 
 def get_tf_idf_set(data_path,
-                   vectorizer_path,
+                   vectorizer_folder,
+                   vectorizer_name,
                    tfidf_config_path,
                    feature_column_name="tokenized_snippet",
                    outcome_column_name="y"):
@@ -44,7 +45,8 @@ def get_tf_idf_set(data_path,
 
     Arguments:
         data_path (str): filepath to jsonl file with dataset
-        vectorizer_path (str): filepath to tfidf vectorizer, if the file does not exist a new one is created
+        vectorizer_folder (str): folder to tfidf vectorizer, if the folder does not exist a new one is created
+        vectorizer_name (str): name of vectorizer, if the vectorizer does not exist it is created
         tfidf_path (str): filepath to tfidf config, only used if vectorizer created
 
     Returns:
@@ -56,6 +58,9 @@ def get_tf_idf_set(data_path,
     df = pd.read_json(data_path,
                       orient='records',
                       lines=True)
+
+    # initialize vectorizer path
+    vectorizer_path = os.path.join(vectorizer_folder, vectorizer_name) + ".pkl"
 
     # check if vectorizer file exists, if so load it, otherwise create it
     if os.path.isfile(vectorizer_path):
@@ -72,6 +77,10 @@ def get_tf_idf_set(data_path,
         vectorizer = fit_tf_idf(train_df=df,
                                 feature_column_name=feature_column_name,
                                 vectorizer_args=tfidf_parameters)
+
+        # create vectorizer folder if it does not exist
+        if not os.path.exists(vectorizer_folder):
+            os.makedirs(vectorizer_folder)
 
         # save vectorizer
         with open(vectorizer_path, "wb") as f:

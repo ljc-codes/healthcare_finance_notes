@@ -1,7 +1,11 @@
+import os
 import json
+import pickle
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
+
+from training.training_preparation import get_tf_idf_set
 
 
 def grid_search_model(X_train,
@@ -41,9 +45,18 @@ def grid_search_model(X_train,
     return best_model
 
 
-def train_random_forest(window_size,
+def train_random_forest(data_path,
+                        vectorizer_folder,
+                        vectorizer_name,
+                        tf_idf_config_path,
                         grid_search_config_path,
-                        model_save_path):
+                        models_folder,
+                        model_name):
+    # get training set
+    X_train, y_train = get_tf_idf_set(data_path=data_path,
+                                      vectorizer_folder=vectorizer_folder,
+                                      vectorizer_name=vectorizer_name,
+                                      tf_idf_config_path=tf_idf_config_path)
 
     # load grid search parameters
     with open(grid_search_config_path, "r") as f:
@@ -53,4 +66,67 @@ def train_random_forest(window_size,
                               y_train=y_train,
                               model_parameters=model_parameters)
 
+    if not os.path.exists(models_folder):
+        os.makedirs(models_folder)
 
+    model_save_path = os.path.join(models_folder, model_name) + '.pkl'
+    # save model
+    with open(model_save_path, "wb") as f:
+        pickle.dump(model, f)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--data_path',
+                        '-d',
+                        required=True,
+                        type=str,
+                        help='Path to data file')
+
+    parser.add_argument('--vectorizer_folder',
+                        '-vf',
+                        default='../vectorizers',
+                        type=str,
+                        help='Path to vectorizer folder, if none exists will be created')
+
+    parser.add_argument('--vectorizer_name',
+                        '-vn',
+                        required=True,
+                        type=str,
+                        help='Name of vectorizer, if none exists will be created')
+
+    parser.add_argument('--tf_idf_config_path',
+                        '-t',
+                        default='../tf_idf_config.json',
+                        type=str,
+                        help='Path to tf-idf config file')
+
+    parser.add_argument('--grid_search_config_path',
+                        '-g',
+                        default='rf_grid_search_config.json',
+                        type=str,
+                        help='Path to grid search config file')
+
+    parser.add_argument('--models_folder',
+                        '-mf',
+                        default='models',
+                        type=str,
+                        help='Path to models, if none exists it will be created')
+
+    parser.add_argument('--model_name',
+                        '-mn',
+                        required=True,
+                        type=str,
+                        help='Name of model')
+
+    args = parser.parse_args()
+
+    train_random_forest(data_path=args.data_path,
+                        vectorizer_folder=args.vectorizer_folder,
+                        vectorizer_name=args.vectorizer_name,
+                        tf_idf_config_path=args.tf_idf_config_path,
+                        grid_search_config_path=args.grid_search_config_path,
+                        models_folder=args.models_folder,
+                        model_name=args.model_name)
