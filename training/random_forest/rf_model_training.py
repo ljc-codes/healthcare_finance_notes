@@ -48,7 +48,7 @@ def grid_search_model(X_train,
 def train_random_forest(data_path,
                         vectorizer_folder,
                         vectorizer_name,
-                        tf_idf_config_path,
+                        tfidf_config_path,
                         grid_search_config_path,
                         models_folder,
                         model_name):
@@ -56,12 +56,13 @@ def train_random_forest(data_path,
     X_train, y_train = get_tf_idf_set(data_path=data_path,
                                       vectorizer_folder=vectorizer_folder,
                                       vectorizer_name=vectorizer_name,
-                                      tf_idf_config_path=tf_idf_config_path)
+                                      tfidf_config_path=tfidf_config_path)
 
     # load grid search parameters
     with open(grid_search_config_path, "r") as f:
         model_parameters = json.load(f)
 
+    print("Grid searching model...")
     model = grid_search_model(X_train=X_train,
                               y_train=y_train,
                               model_parameters=model_parameters)
@@ -97,7 +98,7 @@ if __name__ == "__main__":
                         type=str,
                         help='Name of vectorizer, if none exists will be created')
 
-    parser.add_argument('--tf_idf_config_path',
+    parser.add_argument('--tfidf_config_path',
                         '-t',
                         default='../tf_idf_config.json',
                         type=str,
@@ -126,7 +127,7 @@ if __name__ == "__main__":
     train_random_forest(data_path=args.data_path,
                         vectorizer_folder=args.vectorizer_folder,
                         vectorizer_name=args.vectorizer_name,
-                        tf_idf_config_path=args.tf_idf_config_path,
+                        tfidf_config_path=args.tfidf_config_path,
                         grid_search_config_path=args.grid_search_config_path,
                         models_folder=args.models_folder,
                         model_name=args.model_name)

@@ -1,6 +1,6 @@
 import os
 import json
-import pickle
+import dill as pickle
 
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -64,9 +64,11 @@ def get_tf_idf_set(data_path,
 
     # check if vectorizer file exists, if so load it, otherwise create it
     if os.path.isfile(vectorizer_path):
+        print("Loading tfidf vectorizer...")
         with open(vectorizer_path, "rb") as f:
             vectorizer = pickle.load(f)
     else:
+        print("Creating tfidf vectorizer...")
         # load tfidf parameters
         with open(tfidf_config_path, "r") as f:
             tfidf_parameters = json.load(f)
@@ -86,6 +88,7 @@ def get_tf_idf_set(data_path,
         with open(vectorizer_path, "wb") as f:
             pickle.dump(vectorizer, f)
 
+    print("Transforming dataset with tfidf...")
     X = convert_to_tfidf(df=df,
                          vectorizer=vectorizer,
                          feature_column_name=feature_column_name)
