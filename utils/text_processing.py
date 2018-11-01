@@ -56,7 +56,9 @@ def process_text(df,
                  training=False,
                  text_column_name=constants.TEXT_COLUMN_NAME,
                  tags_column_name=constants.TAGS_COLUMN_NAME,
-                 financial_flag_column_name=constants.FINANCIAL_FLAG_COLUMN_NAME):
+                 financial_flag_column_name=constants.FINANCIAL_FLAG_COLUMN_NAME,
+                 feature_column_name=constants.FEATURE_COLUMN_NAME,
+                 outcome_column_name=constants.OUTCOME_COLUMN_NAME):
     """
     Process text into trainable set of tokens and outcome labels
 
@@ -79,11 +81,11 @@ def process_text(df,
                                                   tag=tag,
                                                   window_size=window_size)
             for snippet in text_snippets:
-                data_point = {"tokenized_snippet": snippet}
+                data_point = {feature_column_name: snippet}
 
                 # add outcome if dataset being used for training
                 if training:
-                    data_point["y"] = row[financial_flag_column_name] * 1
+                    data_point[constants.OUTCOME_COLUMN_NAME] = row[financial_flag_column_name] * 1
 
                 labeled_data.append(data_point)
 

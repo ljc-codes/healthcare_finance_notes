@@ -5,11 +5,11 @@ import dill as pickle
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from predict import convert_to_tfidf
+from utils import constants
 
 
 def fit_tf_idf(train_df,
-               feature_column_name='tokenized_snippet',
+               feature_column_name=constants.FEATURE_COLUMN_NAME,
                vectorizer_args={}):
     """
     Fits a tf-idf vectorizer on a provided dataframe
@@ -38,8 +38,8 @@ def get_tf_idf_set(data_path,
                    vectorizer_folder,
                    vectorizer_name,
                    tfidf_config_path,
-                   feature_column_name="tokenized_snippet",
-                   outcome_column_name="y"):
+                   feature_column_name=constants.FEATURE_COLUMN_NAME,
+                   outcome_column_name=constants.OUTCOME_COLUMN_NAME):
     """
     Loads dataset and converts it into a tfidf matrix and outcome array
 
@@ -89,9 +89,7 @@ def get_tf_idf_set(data_path,
             pickle.dump(vectorizer, f)
 
     print("Transforming dataset with tfidf...")
-    X = convert_to_tfidf(df=df,
-                         vectorizer=vectorizer,
-                         feature_column_name=feature_column_name)
+    X = vectorizer.transform(df[feature_column_name])
     y = df[outcome_column_name].values
 
     return X, y
