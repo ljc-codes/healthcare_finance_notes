@@ -83,6 +83,21 @@ def split_df(df,
     return train_df, test_df
 
 
+def save_data(df, save_folder, filename):
+    """
+    Saves data to a jsonl files
+
+    Arguments:
+        df (Pandas Dataframe): data to save
+        save_folder (str): folder to save data in
+        filename (str): name of file
+    """
+    filepath = os.path.join(save_folder, filename)
+    df.to_json(filepath,
+               orient='records',
+               lines=True)
+
+
 def download_train_test_set(window_size,
                             save_folder):
     """
@@ -103,13 +118,31 @@ def download_train_test_set(window_size,
         os.makedirs(save_folder)
 
     # save train_df
-    train_filepath = os.path.join(save_folder, "training_ws{0}.jsonl".format(window_size))
-    train_df.to_json(train_filepath,
-                     orient='records',
-                     lines=True)
+    train_filename = "training_ws{0}.jsonl".format(window_size)
+    save_data(train_df, save_folder, train_filename)
 
     # save test_df
-    test_filepath = os.path.join(save_folder, "testing_ws{0}.jsonl".format(window_size))
-    test_df.to_json(test_filepath,
-                    orient='records',
-                    lines=True)
+    test_filename = "testing_ws{0}.jsonl".format(window_size)
+    save_data(test_df, save_folder, test_filename)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--window_size',
+                        '-w',
+                        required=True,
+                        type=int,
+                        help='Window size of text snippet')
+
+    parser.add_argument('--save_folder',
+                        '-s',
+                        default='./data',
+                        type=str,
+                        help='folder to save files to')
+
+    args = parser.parse_args()
+
+    download_train_test_set(window_size=args.window_size,
+                            save_folder=args.save_folder)
