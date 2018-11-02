@@ -59,7 +59,7 @@ def train_random_forest(data_path,
     over random forest hyperparameters for the best model, and saves the model as pickle object
     """
     # get training set
-    X_train, y_train, feature_engineering_config = get_feature_set(
+    X_train, y_train, _ = get_feature_set(
         data_path=data_path,
         feature_engineering_config_path=feature_engineering_config_path,
         vectorizer_folder=vectorizer_folder,

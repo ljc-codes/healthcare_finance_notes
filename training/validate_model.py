@@ -2,13 +2,16 @@ import os
 from datetime import datetime
 
 from pymongo import MongoClient
+from sklearn.metrics import roc_auc_score
 
 from utils import constants
+from training import file_system
+from training.random_forest.training_preparation import get_feature_set
 
 
-def stores_model_result(model_result,
-                        db_name=constants.MONGO_DATABASE_NAME,
-                        collection_name=constants.MONGO_COLLECTION_NAME):
+def store_model_result(model_result,
+                       db_name=constants.MONGO_DATABASE_NAME,
+                       collection_name=constants.MONGO_COLLECTION_NAME):
     """
     Store model in MongoDB and prints id
 
@@ -40,13 +43,52 @@ def create_model_result_document(model_type,
         metadata (dict): additional data to be included with model result
 
     Returns:
-        model_summary (dict): dictionary holding various info on the model result
+        model_result (dict): dictionary holding various info on the model result
     """
-    model_summary = {
+    model_result = {
         "model_type": model_type,
         score_type: '{0:.4f}'.format(score),
         "metadata": metadata,
         "date": datetime.utcnow()
     }
 
-    return model_summary
+    return model_result
+
+
+def validate_random_forest(data_path,
+                           vectorizer_name,
+                           pca_name,
+                           model_name,
+                           feature_engineering_config_path='random_forest/feature_engineering_config.json',
+                           vectorizer_folder='random_forest/vectorizers',
+                           pca_folder='random_forest/pca',
+                           model_folder='random_forest/models'):
+    """
+
+    """
+
+    # load and format test data
+    X_test, y_test, feature_engineering_config = get_feature_set(
+        data_path=data_path,
+        vectorizer_name=vectorizer_name,
+        pca_name=pca_name,
+        feature_engineering_config_path=feature_engineering_config_path,
+        vectorizer_folder=vectorizer_folder,
+        pca_folder=pca_folder)
+
+    model = file_system.load_component(function=None,
+                                       data_input=None,
+                                       component_folder=model_folder,
+                                       component_name=model_name,
+                                       component_config=None,
+                                       label='model')
+    y_pred = model.predict_proba(X_test)
+    score = roc_auc_score(y_true=y_test,
+                          y_score=y_pred)
+
+    model_result = create_model_result_document(model_type='random_forest',
+                                                score_type='auc',
+                                                score=score,
+                                                metadata=feature_engineering_config)
+
+    store_model_result(model_result=model_result)

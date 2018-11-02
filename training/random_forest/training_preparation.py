@@ -76,6 +76,7 @@ def get_feature_set(data_path,
     Returns:
         X (numpy array): tfidf matrix
         y (numpy array): outcome labels
+        feature_engineering_params (dict): dictionary of parameters used to transform data
     """
 
     # load data
@@ -117,4 +118,4 @@ def get_feature_set(data_path,
 
     y = df[outcome_column_name].values
 
-    return X, y
+    return X, y, feature_engineering_params
