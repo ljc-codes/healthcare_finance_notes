@@ -36,7 +36,8 @@ def grid_search_model(X_train,
     model_cv = GridSearchCV(estimator=model,
                             param_grid=model_parameters,
                             scoring=scoring_metric,
-                            cv=cv_folds)
+                            cv=cv_folds,
+                            verbose=5)
     model_cv.fit(X_train, y_train)
 
     # select best performing model
