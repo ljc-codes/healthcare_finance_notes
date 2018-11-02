@@ -99,7 +99,7 @@ if __name__ == "__main__":
                         type=str,
                         help='Name of vectorizer, if none exists will be created')
 
-    parser.add_argument('--pca',
+    parser.add_argument('--pca_name',
                         '-p',
                         required=True,
                         type=str,
