@@ -57,8 +57,8 @@ def load_component(function,
         component = function(data_input=data_input,
                              config=component_config)
 
-        save_component(component_folder=component_folder,
-                       component_path=component_path,
+        save_component(save_folder=component_folder,
+                       save_path=component_path,
                        component=component)
 
     return component
