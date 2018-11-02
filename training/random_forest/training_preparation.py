@@ -96,7 +96,7 @@ def get_feature_set(data_path,
 
     vectorizer = file_system.load_component(
         function=fit_tfidf,
-        df=df,
+        data_input=df,
         component_folder=vectorizer_folder,
         component_name=vectorizer_name,
         component_config=feature_engineering_params["tfidf"],
@@ -107,7 +107,7 @@ def get_feature_set(data_path,
 
     pca = file_system.load_component(
         function=fit_pca,
-        df=df,
+        data_input=X_full,
         component_folder=pca_folder,
         component_name=pca_name,
         component_config=feature_engineering_params["pca"],
