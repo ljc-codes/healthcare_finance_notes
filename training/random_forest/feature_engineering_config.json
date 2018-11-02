@@ -1,0 +1,12 @@
+{
+    "tfidf": {
+    	"max_df": 0.5,
+    	"min_df": 5,
+    	"max_features": 1000,
+    	"ngram_range": [1, 2]
+    },
+    "pca": {
+    	"n_components": 50,
+    	"random_state": 42
+    }
+}

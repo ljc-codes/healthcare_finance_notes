@@ -5,3 +5,5 @@ FINANCIAL_FLAG_COLUMN_NAME = "financial_flag"
 FEATURE_COLUMN_NAME = 'tokenized_snippet'
 OUTCOME_COLUMN_NAME = 'y'
 PREDICTION_COLUMN_NAME = 'y_pred'
+MONGO_DATABASE_NAME = 'healthcare_notes_classification'
+MONGO_COLLECTION_NAME = 'model_performance'

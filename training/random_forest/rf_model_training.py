@@ -1,11 +1,11 @@
 import os
 import json
-import pickle
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 
-from training.training_preparation import get_tf_idf_set
+from training.random_forest.training_preparation import get_feature_set
+from training import file_system
 
 
 def grid_search_model(X_train,
@@ -46,21 +46,26 @@ def grid_search_model(X_train,
 
 
 def train_random_forest(data_path,
-                        vectorizer_folder,
                         vectorizer_name,
-                        tfidf_config_path,
-                        grid_search_config_path,
-                        models_folder,
-                        model_name):
+                        pca_name,
+                        model_name,
+                        feature_engineering_config_path='feature_engineering_config.json',
+                        grid_search_config_path='rf_grid_search_config.json',
+                        vectorizer_folder='vectorizers',
+                        pca_folder='pca',
+                        models_folder='models'):
     """
     Loads data, transforms it with tf-idf (training a new vectorizer if necessary), grid searches
     over random forest hyperparameters for the best model, and saves the model as pickle object
     """
     # get training set
-    X_train, y_train = get_tf_idf_set(data_path=data_path,
-                                      vectorizer_folder=vectorizer_folder,
-                                      vectorizer_name=vectorizer_name,
-                                      tfidf_config_path=tfidf_config_path)
+    X_train, y_train, feature_engineering_config = get_feature_set(
+        data_path=data_path,
+        feature_engineering_config_path=feature_engineering_config_path,
+        vectorizer_folder=vectorizer_folder,
+        vectorizer_name=vectorizer_name,
+        pca_folder=pca_folder,
+        pca_name=pca_name)
 
     # load grid search parameters
     with open(grid_search_config_path, "r") as f:
@@ -71,14 +76,11 @@ def train_random_forest(data_path,
                               y_train=y_train,
                               model_parameters=model_parameters)
 
-    # create model folder if it does not exist
-    if not os.path.exists(models_folder):
-        os.makedirs(models_folder)
-
     model_save_path = os.path.join(models_folder, model_name) + '.pkl'
-    # save model
-    with open(model_save_path, "wb") as f:
-        pickle.dump(model, f)
+
+    file_system.save_component(save_folder=models_folder,
+                               save_path=model_save_path,
+                               component=model)
 
 
 if __name__ == "__main__":
@@ -91,35 +93,17 @@ if __name__ == "__main__":
                         type=str,
                         help='Path to data file')
 
-    parser.add_argument('--vectorizer_folder',
-                        '-vf',
-                        default='../vectorizers',
-                        type=str,
-                        help='Path to vectorizer folder, if none exists will be created')
-
     parser.add_argument('--vectorizer_name',
-                        '-vn',
+                        '-v',
                         required=True,
                         type=str,
                         help='Name of vectorizer, if none exists will be created')
 
-    parser.add_argument('--tfidf_config_path',
-                        '-t',
-                        default='../tf_idf_config.json',
+    parser.add_argument('--pca',
+                        '-p',
+                        required=True,
                         type=str,
-                        help='Path to tf-idf config file')
-
-    parser.add_argument('--grid_search_config_path',
-                        '-g',
-                        default='rf_grid_search_config.json',
-                        type=str,
-                        help='Path to grid search config file')
-
-    parser.add_argument('--models_folder',
-                        '-mf',
-                        default='models',
-                        type=str,
-                        help='Path to models, if none exists it will be created')
+                        help='Name of pca, if none exists will be created')
 
     parser.add_argument('--model_name',
                         '-mn',
@@ -130,9 +114,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     train_random_forest(data_path=args.data_path,
-                        vectorizer_folder=args.vectorizer_folder,
                         vectorizer_name=args.vectorizer_name,
-                        tfidf_config_path=args.tfidf_config_path,
-                        grid_search_config_path=args.grid_search_config_path,
-                        models_folder=args.models_folder,
+                        pca_name=args.pca_name,
                         model_name=args.model_name)

@@ -58,7 +58,8 @@ def process_text(df,
                  tags_column_name=constants.TAGS_COLUMN_NAME,
                  financial_flag_column_name=constants.FINANCIAL_FLAG_COLUMN_NAME,
                  feature_column_name=constants.FEATURE_COLUMN_NAME,
-                 outcome_column_name=constants.OUTCOME_COLUMN_NAME):
+                 outcome_column_name=constants.OUTCOME_COLUMN_NAME,
+                 columns_to_keep=[]):
     """
     Process text into trainable set of tokens and outcome labels
 
@@ -82,6 +83,9 @@ def process_text(df,
                                                   window_size=window_size)
             for snippet in text_snippets:
                 data_point = {feature_column_name: snippet}
+
+                for column in columns_to_keep:
+                    data_point[column] = row[column]
 
                 # add outcome if dataset being used for training
                 if training:

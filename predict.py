@@ -23,5 +23,5 @@ def predict_tfidf_model(df,
         df (Pandas Dataframe): dataframe with feature labels and predictions
     """
     X = vectorizer.transform(df[feature_column_name])
-    df[predictions_column_name] = model.predict(X)
+    df[predictions_column_name] = model.predict_proba(X)
     return df
