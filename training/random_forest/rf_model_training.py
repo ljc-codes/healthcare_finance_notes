@@ -46,6 +46,23 @@ def grid_search_model(X_train,
     return best_model
 
 
+def fit_random_forest(data_input,
+                      config):
+    """
+    Fits a random forest model to training data
+
+    Arguments:
+        data_input (numpy array): training dataset
+        config (dict): config params for a given model
+
+    Returns:
+        model (RandomForest Model)
+    """
+    model = RandomForestClassifier(**config)
+    model.fit(*data_input)
+    return model
+
+
 def train_random_forest(data_path,
                         vectorizer_name,
                         pca_name,
@@ -53,6 +70,7 @@ def train_random_forest(data_path,
                         grid_search=False,
                         feature_engineering_config_path='feature_engineering_config.json',
                         grid_search_config_path='rf_grid_search_config.json',
+                        model_parameters_config_path='rf_model_config.json',
                         vectorizer_folder='vectorizers',
                         pca_folder='pca',
                         models_folder='models'):
@@ -82,11 +100,15 @@ def train_random_forest(data_path,
 
     else:
 
-        model = file_system.load_component(function=None,
-                                           data_input=None,
+        # load model parameters
+        with open(model_parameters_config_path, "r") as f:
+            model_parameters = json.load(f)
+
+        model = file_system.load_component(function=fit_random_forest,
+                                           data_input=(X_train, y_train),
                                            component_folder=models_folder,
                                            component_name=model_name,
-                                           component_config=None,
+                                           component_config=model_parameters,
                                            label='model')
         model.fit(X_train, y_train)
 

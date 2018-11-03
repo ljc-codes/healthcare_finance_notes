@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
+from sklearn.ensemble import RandomForestClassifier
 
 from utils import constants
 from training import file_system
@@ -16,7 +17,7 @@ def fit_tfidf(data_input,
 
     Arguments:
         data_input (Pandas Dataframe): dataframe with feature labels
-        vectorizer_config (dict): config params for a given vectorizer
+        config (dict): config params for a given vectorizer
 
     Keyword Arguments:
         feature_column_name (str): column name of feature to convert into a tf-idf matrix
@@ -43,7 +44,7 @@ def fit_pca(data_input,
 
     Arguments:
         data_input (numpy array): matrix transformed by tfidf
-        pca_config (dict): config params for a given pca
+        config (dict): config params for a given pca
 
     Returns:
         pca (TruncatedSVD): pca object for transforming any tfidf matrix
