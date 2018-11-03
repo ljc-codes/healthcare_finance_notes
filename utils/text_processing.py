@@ -66,7 +66,7 @@ def process_text(df,
                  stride_length=50,
                  text_column_name=constants.TEXT_COLUMN_NAME,
                  columns_to_keep=[constants.NOTE_ID_COLUMN_NAME, constants.OUTCOME_COLUMN_NAME],
-                 feature_column_name=constants.FEATURE_COLUMN_NAME,):
+                 feature_column_name=constants.FEATURE_COLUMN_NAME):
     """
     Process text into trainable set of tokens and outcome labels
 
