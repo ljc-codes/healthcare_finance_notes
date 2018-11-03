@@ -3,7 +3,6 @@ import json
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
-from sklearn.ensemble import RandomForestClassifier
 
 from utils import constants
 from training import file_system

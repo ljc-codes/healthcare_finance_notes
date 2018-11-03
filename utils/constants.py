@@ -1,5 +1,14 @@
 NOTE_ID_COLUMN_NAME = "note_id"
-TAGS_COLUMN_NAME = "tags"
+TAGS = ["cost",
+        "insurance",
+        "pay",
+        "financial",
+        "expense",
+        "afford",
+        "medicare",
+        "outofpocket",
+        "expensive",
+        "costly"]
 TEXT_COLUMN_NAME = "text"
 FEATURE_COLUMN_NAME = 'tokenized_snippet'
 OUTCOME_COLUMN_NAME = "financial_flag"

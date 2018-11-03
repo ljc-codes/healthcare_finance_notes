@@ -30,13 +30,13 @@ def clean_text(text):
     return clean_text
 
 
-def extract_text_snippets(tokenized_text, tag, window_size):
+def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
     """
     Gets list of tokens of window size * 2 surrounding a specific tag word
 
     Arguments:
         tokenized_text (list of str): list of tokens
-        tag (str): word to get window around
+        tags (list of str): words to get window around
         window_size (int): number of tokens to get both before and after the `tag`
 
     Returns:
@@ -45,7 +45,7 @@ def extract_text_snippets(tokenized_text, tag, window_size):
 
     tag_indices = []
     for i, token in enumerate(tokenized_text):
-        if token == tag:
+        if token in tags:
             tag_indices.append(i)
 
     window_params = [(max(0, index - window_size), min(len(tokenized_text), index + window_size))
@@ -55,11 +55,20 @@ def extract_text_snippets(tokenized_text, tag, window_size):
     return text_snippets
 
 
+def extract_text_snippets(tokenized_text,
+                          window_size,
+                          stride_length):
+    text_snippets = [tokenized_text[i:i + window_size * 2]
+                     for i in range(0, len(tokenized_text) - window_size * 2 + 1, stride_length)]
+    return text_snippets
+
+
 def process_text(df,
                  window_size,
+                 tags=constants.TAGS,
+                 stride_length=50,
                  text_column_name=constants.TEXT_COLUMN_NAME,
-                 columns_to_keep=[constants.OUTCOME_COLUMN_NAME],
-                 tags_column_name=constants.TAGS_COLUMN_NAME,
+                 columns_to_keep=[constants.NOTE_ID_COLUMN_NAME, constants.OUTCOME_COLUMN_NAME],
                  feature_column_name=constants.FEATURE_COLUMN_NAME,):
     """
     Process text into trainable set of tokens and outcome labels
@@ -77,18 +86,27 @@ def process_text(df,
     # get labeled data by looping through each row and extracting text snippets
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
 
-        for tag in row[tags_column_name]:
-            row["clean_text"] = clean_text(row[text_column_name])
+        row["clean_text"] = clean_text(row[text_column_name])
+
+        if tags:
+            # if creating snippets around specific tags, extract snippets for each tag and then flatten the list
+            text_snippets = extract_text_snippets_with_tags(tokenized_text=row["clean_text"],
+                                                            window_size=window_size,
+                                                            tag=tags)
+        else:
+            # if not using tags, extract sliding window over text
             text_snippets = extract_text_snippets(tokenized_text=row["clean_text"],
-                                                  tag=tag,
-                                                  window_size=window_size)
-            for snippet in text_snippets:
-                data_point = {feature_column_name: snippet}
+                                                  window_size=window_size,
+                                                  stride_length=stride_length)
 
-                for column in columns_to_keep:
-                    data_point[column] = row[column]
+        # loop through each snippet and add it to a dict along with any other chosen columns
+        for snippet in text_snippets:
+            data_point = {feature_column_name: snippet}
 
-                labeled_data.append(data_point)
+            for column in columns_to_keep:
+                data_point[column] = row[column]
+
+            labeled_data.append(data_point)
 
     labeled_df = pd.DataFrame(labeled_data)
 
