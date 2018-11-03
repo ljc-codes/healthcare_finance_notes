@@ -43,10 +43,7 @@ def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
         text_snippets (list of list of str): list of list of tokens of size window * 2
     """
 
-    tag_indices = []
-    for i, token in enumerate(tokenized_text):
-        if token in tags:
-            tag_indices.append(i)
+    tag_indices = [i for i, token in enumerate(tokenized_text) if token in tags]
 
     window_params = [(max(0, index - window_size), min(len(tokenized_text), index + window_size))
                      for index in tag_indices]
@@ -92,7 +89,7 @@ def process_text(df,
             # if creating snippets around specific tags, extract snippets for each tag and then flatten the list
             text_snippets = extract_text_snippets_with_tags(tokenized_text=row["clean_text"],
                                                             window_size=window_size,
-                                                            tag=tags)
+                                                            tags=tags)
         else:
             # if not using tags, extract sliding window over text
             text_snippets = extract_text_snippets(tokenized_text=row["clean_text"],
