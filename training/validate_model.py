@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from pymongo import MongoClient
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
 
 from utils import constants
 from training import file_system
@@ -30,27 +30,31 @@ def store_model_result(model_result,
 
 
 def create_model_result_document(model_type,
-                                 score_type,
-                                 score,
-                                 metadata):
+                                 scores,
+                                 metadata,
+                                 data_file):
     """
     Creates dictionary of model results
 
     Arguments:
         model_type (str): type of model (e.g. `random_forest`)
-        score_type (str): type of score (e.g. `auc`)
-        score (float): value of score
+        scores (dict): dict of score_type: score_value
         metadata (dict): additional data to be included with model result
+        data_file (str): path to data file validated on
 
     Returns:
         model_result (dict): dictionary holding various info on the model result
     """
     model_result = {
         "model_type": model_type,
-        score_type: '{0:.4f}'.format(score),
         "metadata": metadata,
-        "date": datetime.utcnow()
+        "date": datetime.utcnow(),
+        "data": data_file
     }
+
+    # add scores
+    for score in scores:
+        model_result[score] = scores[score]
 
     return model_result
 
@@ -59,6 +63,7 @@ def validate_random_forest(data_path,
                            vectorizer_name,
                            pca_name,
                            model_name,
+                           threshold=0.5,
                            feature_engineering_config_path='random_forest/feature_engineering_config.json',
                            vectorizer_folder='random_forest/vectorizers',
                            pca_folder='random_forest/pca',
@@ -89,14 +94,19 @@ def validate_random_forest(data_path,
                                        component_config=None,
                                        label='model')
     y_pred = model.predict_proba(X_test)
+    y_pred_val = model.predict(X_test)
 
-    score = roc_auc_score(y_true=y_test,
-                          y_score=y_pred[:, 1])
+    scores = {
+        "auc": '{:.4f}'.format(roc_auc_score(y_true=y_test, y_score=y_pred[:, 1])),
+        "accuracy": '{:.4f}'.format(accuracy_score(y_true=y_test, y_pred=y_pred_val)),
+        "precision": '{:.4f}'.format(precision_score(y_true=y_test, y_pred=y_pred_val)),
+        "recall": '{:.4f}'.format(recall_score(y_true=y_test, y_pred=y_pred_val))
+    }
 
     model_result = create_model_result_document(model_type='random_forest',
-                                                score_type='auc',
-                                                score=score,
-                                                metadata=feature_engineering_config)
+                                                scores=scores,
+                                                metadata=feature_engineering_config,
+                                                data_file=data_path)
 
     store_model_result(model_result=model_result)
 
