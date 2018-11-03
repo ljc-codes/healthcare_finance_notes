@@ -64,7 +64,13 @@ def validate_random_forest(data_path,
                            pca_folder='random_forest/pca',
                            model_folder='random_forest/models'):
     """
+    Validates the performance of a random forest model
 
+    Arguments:
+        data_path (str): filepath to jsonl file with test dataset
+        vectorizer_name (str): name of vectorizer file
+        pca_name (str): name of pca file
+        model_name (str): name of model file
     """
 
     # load and format test data
@@ -92,3 +98,39 @@ def validate_random_forest(data_path,
                                                 metadata=feature_engineering_config)
 
     store_model_result(model_result=model_result)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--data_path',
+                        '-d',
+                        required=True,
+                        type=str,
+                        help='Path to data file')
+
+    parser.add_argument('--vectorizer_name',
+                        '-v',
+                        required=True,
+                        type=str,
+                        help='Name of vectorizer, if none exists will be created')
+
+    parser.add_argument('--pca_name',
+                        '-p',
+                        required=True,
+                        type=str,
+                        help='Name of pca, if none exists will be created')
+
+    parser.add_argument('--model_name',
+                        '-mn',
+                        required=True,
+                        type=str,
+                        help='Name of model')
+
+    args = parser.parse_args()
+
+    validate_random_forest(data_path=args.data_path,
+                           vectorizer_name=args.vectorizer_name,
+                           pca_name=args.pca_name,
+                           model_name=args.model_name)
