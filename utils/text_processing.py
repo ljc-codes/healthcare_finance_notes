@@ -20,7 +20,11 @@ def clean_text(text):
     Returns:
         clean_text (list of str): list of tokens
     """
-    tokenized_text = nltk.word_tokenize(text)
+
+    # create token for out of pocket
+    text_oop = text.replace('out of pocket', 'outofpocket')
+
+    tokenized_text = nltk.word_tokenize(text_oop)
     lower_case_words = [word.lower() for word in tokenized_text if word.isalpha()]
     clean_text = [word for word in lower_case_words if word not in STOPWORDS]
     return clean_text
