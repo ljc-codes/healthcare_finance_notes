@@ -11,7 +11,7 @@ from utils.text_processing import process_text
 def extract_notes(db_config,
                   note_id_column_name=constants.NOTE_ID_COLUMN_NAME,
                   text_column_name=constants.TEXT_COLUMN_NAME,
-                  financial_flag_column_name=constants.FINANCIAL_FLAG_COLUMN_NAME):
+                  financial_flag_column_name=constants.OUTCOME_COLUMN_NAME):
     """
     Extract notes from postgres db into pandas dataframe
 
@@ -109,8 +109,7 @@ def download_train_test_set(window_size,
     """
     df = extract_notes(os.environ["DB_CONFIG"])
     df_clean = process_text(df=df,
-                            window_size=window_size,
-                            training=True)
+                            window_size=window_size)
     train_df, test_df = split_df(df_clean)
 
     # if save folder does not exist, create it

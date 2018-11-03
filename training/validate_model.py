@@ -89,8 +89,9 @@ def validate_random_forest(data_path,
                                        component_config=None,
                                        label='model')
     y_pred = model.predict_proba(X_test)
+
     score = roc_auc_score(y_true=y_test,
-                          y_score=y_pred)
+                          y_score=y_pred[:, 1])
 
     model_result = create_model_result_document(model_type='random_forest',
                                                 score_type='auc',
