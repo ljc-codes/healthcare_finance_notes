@@ -50,6 +50,7 @@ def train_random_forest(data_path,
                         vectorizer_name,
                         pca_name,
                         model_name,
+                        grid_search=False,
                         feature_engineering_config_path='feature_engineering_config.json',
                         grid_search_config_path='rf_grid_search_config.json',
                         vectorizer_folder='vectorizers',
@@ -68,17 +69,28 @@ def train_random_forest(data_path,
         pca_folder=pca_folder,
         pca_name=pca_name)
 
-    # load grid search parameters
-    with open(grid_search_config_path, "r") as f:
-        model_parameters = json.load(f)
+    if grid_search:
 
-    print("Grid searching model...")
-    model = grid_search_model(X_train=X_train,
-                              y_train=y_train,
-                              model_parameters=model_parameters)
+        # load grid search parameters
+        with open(grid_search_config_path, "r") as f:
+            model_parameters = json.load(f)
+
+        print("Grid searching model...")
+        model = grid_search_model(X_train=X_train,
+                                  y_train=y_train,
+                                  model_parameters=model_parameters)
+
+    else:
+
+        model = file_system.load_component(function=None,
+                                           data_input=None,
+                                           component_folder=models_folder,
+                                           component_name=model_name,
+                                           component_config=None,
+                                           label='model')
+        model.fit(X_train, y_train)
 
     model_save_path = os.path.join(models_folder, model_name) + '.pkl'
-
     file_system.save_component(save_folder=models_folder,
                                save_path=model_save_path,
                                component=model)
@@ -111,6 +123,11 @@ if __name__ == "__main__":
                         required=True,
                         type=str,
                         help='Name of model')
+
+    parser.add_argument('--grid_search',
+                        '-g',
+                        action='store_true',
+                        help='Grid search model parameters')
 
     args = parser.parse_args()
 
