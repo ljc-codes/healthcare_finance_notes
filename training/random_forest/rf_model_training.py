@@ -95,6 +95,8 @@ def train_random_forest(data_path,
                                save_path=model_save_path,
                                component=model)
 
+    print("Complete!")
+
 
 if __name__ == "__main__":
     import argparse
