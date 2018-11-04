@@ -1,14 +1,15 @@
 import setuptools
+from setuptools.command.install import install
 
 
-class DownloadStopWords(setuptools.command.install):
+class DownloadStopWords(install):
     """
     install nltk stop words after installation
     """
     def run(self):
         import nltk
         nltk.download('stopwords')
-        setuptools.command.install.run(self)
+        install.run(self)
 
 
 setuptools.setup(
