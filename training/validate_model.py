@@ -4,7 +4,7 @@ from datetime import datetime
 from pymongo import MongoClient
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
 
-from utils import constants
+from notetagger import constants
 from training import file_system
 from training.random_forest.training_preparation import get_feature_set
 

@@ -4,7 +4,7 @@ import nltk
 from tqdm import tqdm
 import pandas as pd
 
-from utils import constants
+import constants
 
 STOPWORDS = set(nltk.corpus.stopwords.words('english'))
 PUNCTUATION = set(string.punctuation)

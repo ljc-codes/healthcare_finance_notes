@@ -4,8 +4,8 @@ import psycopg2 as pg
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from utils import constants
-from utils.text_processing import process_text
+from notetagger import constants
+from notetagger.text_processing import process_text
 
 
 def extract_notes(db_config,

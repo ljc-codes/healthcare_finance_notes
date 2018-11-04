@@ -1,8 +1,8 @@
 import os
 import dill as pickle
 
-from utils import text_processing
-from utils import constants
+import text_processing
+import constants
 
 
 class NoteTagger:
