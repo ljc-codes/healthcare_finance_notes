@@ -10,12 +10,13 @@ setuptools.setup(
         'dill',
         'nltk',
         'tqdm',
+        'sklearn'
     ],
     extras_require={
         'training': [
             'psycopg2',
-            'sklearn',
-            'pymongo'
+            'pymongo',
+            'ipython'
         ]
     },
     entry_points={
