@@ -1,16 +1,4 @@
 import setuptools
-from setuptools.command.install import install
-
-
-class DownloadStopWords(install):
-    """
-    install nltk stop words after installation
-    """
-    def run(self):
-        import nltk
-        print('test logging')
-        nltk.download('stopwords')
-        install.run(self)
 
 
 setuptools.setup(
@@ -23,9 +11,6 @@ setuptools.setup(
         'nltk',
         'tqdm',
     ],
-    cmdclass={
-        'install': DownloadStopWords
-    },
     extras_require={
         'training': [
             'psycopg2',
