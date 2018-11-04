@@ -1,5 +1,16 @@
 import setuptools
 
+
+class DownloadStopWords(setuptools.command.install):
+    """
+    install nltk stop words after installation
+    """
+    def run(self):
+        import nltk
+        nltk.download('stopwords')
+        setuptools.command.install.run(self)
+
+
 setuptools.setup(
     name="notetagger",
     version="0.0.0",
@@ -10,6 +21,9 @@ setuptools.setup(
         'nltk',
         'tqdm',
     ],
+    cmdclass={
+        'install': DownloadStopWords
+    },
     extras_require={
         'training': [
             'psycopg2',
