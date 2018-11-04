@@ -5,7 +5,10 @@ from pymongo import MongoClient
 from utils import constants
 
 
-def display_results(score="auc"):
+def display_training_results():
+    """
+    displays model results in mongo db database
+    """
 
     # get collection
     client = MongoClient(os.environ["MONGO_CONFIG"])
@@ -20,4 +23,4 @@ def display_results(score="auc"):
 
 
 if __name__ == "__main__":
-    display_results()
+    display_training_results()
