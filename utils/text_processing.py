@@ -32,7 +32,7 @@ def clean_text(text):
 
 def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
     """
-    Gets list of tokens of window size * 2 surrounding a specific tag word
+    Gets multiple lists of tokens of window size * 2 surrounding tag words
 
     Arguments:
         tokenized_text (list of str): list of tokens
@@ -55,7 +55,17 @@ def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
 def extract_text_snippets(tokenized_text,
                           window_size,
                           stride_length):
+    """
+    Get multiple lists of tokens of window size * 2 by moving the window across the entire text
 
+    Arguments:
+        tokenized_text (list of str): list of tokens
+        window_size (int): number of tokens to get both before and after the `tag`
+        stride_length (int): number of tokens to move window each time
+
+    Returns:
+        text_snippets (list of list of str): list of list of tokens of size window * 2
+    """
     token_length = max(len(tokenized_text) - window_size * 2 + 1,
                        1)
     text_snippets = [tokenized_text[i:i + window_size * 2]
