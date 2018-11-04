@@ -8,6 +8,7 @@ class DownloadStopWords(install):
     """
     def run(self):
         import nltk
+        print('test logging')
         nltk.download('stopwords')
         install.run(self)
 
