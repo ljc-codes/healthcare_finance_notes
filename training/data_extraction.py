@@ -99,7 +99,7 @@ def download_train_test_set(window_size,
     save_data(test_df, save_folder, test_filename)
 
 
-if __name__ == "__main__":
+def main():
     import argparse
     parser = argparse.ArgumentParser()
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--save_folder',
                         '-s',
-                        default='./data',
+                        default=os.getcwd().replace('training', 'data'),
                         type=str,
                         help='folder to save files to')
 

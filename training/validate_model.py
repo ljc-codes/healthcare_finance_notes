@@ -63,19 +63,26 @@ def validate_random_forest(data_path,
                            vectorizer_name,
                            pca_name,
                            model_name,
-                           threshold=0.5,
-                           feature_engineering_config_path='random_forest/feature_engineering_config.json',
-                           vectorizer_folder='random_forest/vectorizers',
-                           pca_folder='random_forest/pca',
-                           model_folder='random_forest/models'):
+                           feature_engineering_config_path,
+                           vectorizer_folder,
+                           pca_folder,
+                           model_folder,
+                           threshold=0.5):
     """
-    Validates the performance of a random forest model
+    Calculates various metrics of performance on the random forest model and saves to MongoDB
 
     Arguments:
         data_path (str): filepath to jsonl file with test dataset
         vectorizer_name (str): name of vectorizer file
         pca_name (str): name of pca file
         model_name (str): name of model file
+        feature_engineering_config_path (str): path to feature engineering (tfidf, pca) config file
+        vectorizer_folder (str): folder with vectorizer in it
+        pca_folder (str): folder with pca in it
+        model_folder (str): folder with model in it
+
+    Keyword Arguments:
+        threshold (float): threshold for positive class
     """
 
     # load and format test data
@@ -111,7 +118,7 @@ def validate_random_forest(data_path,
     store_model_result(model_result=model_result)
 
 
-if __name__ == "__main__":
+def main():
     import argparse
     parser = argparse.ArgumentParser()
 
@@ -139,9 +146,37 @@ if __name__ == "__main__":
                         type=str,
                         help='Name of model')
 
+    parser.add_argument('--feature_engineering_config_path',
+                        '-f',
+                        default=os.getcwd() + 'random_forest/feature_engineering_config.json',
+                        type=str,
+                        help='Path to feature engineering configuration file')
+
+    parser.add_argument('--vectorizer_folder',
+                        '-vf',
+                        default=os.getcwd() + 'random_forest/vectorizers',
+                        type=str,
+                        help='Path to vectorizer folder')
+
+    parser.add_argument('--pca_folder',
+                        '-pf',
+                        default=os.getcwd() + 'random_forest/pca',
+                        type=str,
+                        help='Path to pca folder')
+
+    parser.add_argument('--model_folder',
+                        '-mf',
+                        default=os.getcwd() + 'random_forest/models',
+                        type=str,
+                        help='Path to model folder')
+
     args = parser.parse_args()
 
     validate_random_forest(data_path=args.data_path,
                            vectorizer_name=args.vectorizer_name,
                            pca_name=args.pca_name,
-                           model_name=args.model_name)
+                           model_name=args.model_name,
+                           feature_engineering_config_path=args.feature_engineering_config_path,
+                           vectorizer_folder=args.vectorizer_folder,
+                           pca_folder=args.pca_folder,
+                           model_folder=args.model_folder)

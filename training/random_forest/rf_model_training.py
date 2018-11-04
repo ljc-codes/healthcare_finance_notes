@@ -67,16 +67,31 @@ def train_random_forest(data_path,
                         vectorizer_name,
                         pca_name,
                         model_name,
-                        grid_search=False,
-                        feature_engineering_config_path='feature_engineering_config.json',
-                        grid_search_config_path='rf_grid_search_config.json',
-                        model_parameters_config_path='rf_model_config.json',
-                        vectorizer_folder='vectorizers',
-                        pca_folder='pca',
-                        models_folder='models'):
+                        feature_engineering_config_path,
+                        grid_search_config_path,
+                        model_parameters_config_path,
+                        vectorizer_folder,
+                        pca_folder,
+                        model_folder,
+                        grid_search=False):
     """
     Loads data, transforms it with tf-idf (training a new vectorizer if necessary), grid searches
     over random forest hyperparameters for the best model, and saves the model as pickle object
+
+    Arguments:
+        data_path (str): filepath to jsonl file with training dataset
+        vectorizer_name (str): name of vectorizer file
+        pca_name (str): name of pca file
+        model_name (str): name of model file
+        feature_engineering_config_path (str): path to feature engineering (tfidf, pca) config file
+        grid_search_config_path (str): path to grid search config file
+        model_parameters_config_path (str): path to model parameters config
+        vectorizer_folder (str): folder with vectorizer in it
+        pca_folder (str): folder with pca in it
+        model_folder (str): folder with model in it
+
+    Keyword Arguments:
+        grid_search (bool): run grid search over the model
     """
     # get training set
     X_train, y_train, _ = get_feature_set(
@@ -106,21 +121,21 @@ def train_random_forest(data_path,
 
         model = file_system.load_component(function=fit_random_forest,
                                            data_input=(X_train, y_train),
-                                           component_folder=models_folder,
+                                           component_folder=model_folder,
                                            component_name=model_name,
                                            component_config=model_parameters,
                                            label='model')
         model.fit(X_train, y_train)
 
-    model_save_path = os.path.join(models_folder, model_name) + '.pkl'
-    file_system.save_component(save_folder=models_folder,
+    model_save_path = os.path.join(model_folder, model_name) + '.pkl'
+    file_system.save_component(save_folder=model_folder,
                                save_path=model_save_path,
                                component=model)
 
     print("Complete!")
 
 
-if __name__ == "__main__":
+def main():
     import argparse
     parser = argparse.ArgumentParser()
 
@@ -151,11 +166,55 @@ if __name__ == "__main__":
     parser.add_argument('--grid_search',
                         '-g',
                         action='store_true',
+                        default=False,
                         help='Grid search model parameters')
+
+    parser.add_argument('--feature_engineering_config_path',
+                        '-fc',
+                        default=os.path.join(os.getcwd(), 'random_forest/feature_engineering_config.json'),
+                        type=str,
+                        help='Path to feature engineering configuration file')
+
+    parser.add_argument('--grid_search_config_path',
+                        '-gc',
+                        default=os.path.join(os.getcwd(), 'random_forest/rf_grid_search_config.json'),
+                        type=str,
+                        help='Path to grid search configuration file')
+
+    parser.add_argument('--model_parameters_config_path',
+                        '-mc',
+                        default=os.path.join(os.getcwd(), 'random_forest/rf_model_config.json'),
+                        type=str,
+                        help='Path to model parameters configuration file')
+
+    parser.add_argument('--vectorizer_folder',
+                        '-vf',
+                        default=os.path.join(os.getcwd(), 'random_forest/vectorizers'),
+                        type=str,
+                        help='Path to vectorizer folder')
+
+    parser.add_argument('--pca_folder',
+                        '-pf',
+                        default=os.path.join(os.getcwd(), 'random_forest/pca'),
+                        type=str,
+                        help='Path to pca folder')
+
+    parser.add_argument('--model_folder',
+                        '-mf',
+                        default=os.path.join(os.getcwd(), 'random_forest/models'),
+                        type=str,
+                        help='Path to model folder')
 
     args = parser.parse_args()
 
     train_random_forest(data_path=args.data_path,
                         vectorizer_name=args.vectorizer_name,
                         pca_name=args.pca_name,
-                        model_name=args.model_name)
+                        model_name=args.model_name,
+                        feature_engineering_config_path=args.feature_engineering_config_path,
+                        grid_search_config_path=args.grid_search_config_path,
+                        model_parameters_config_path=args.model_parameters_config_path,
+                        vectorizer_folder=args.vectorizer_folder,
+                        pca_folder=args.pca_folder,
+                        model_folder=args.model_folder,
+                        grid_search=args.grid_search)

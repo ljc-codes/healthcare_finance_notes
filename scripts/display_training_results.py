@@ -2,7 +2,7 @@ import os
 
 from pymongo import MongoClient
 
-from utils import constants
+from notetagger import constants
 
 
 def display_training_results():
