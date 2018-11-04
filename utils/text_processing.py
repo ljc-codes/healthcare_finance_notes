@@ -43,7 +43,7 @@ def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
         text_snippets (list of list of str): list of list of tokens of size window * 2
     """
 
-    tag_indices = [i for i, token in enumerate(tokenized_text) if token in tags]
+    tag_indices = [i for i, token in enumerate(tokenized_text) if sum([1 for tag in tags if tag in token]) > 0]
 
     window_params = [(max(0, index - window_size), min(len(tokenized_text), index + window_size))
                      for index in tag_indices]
@@ -55,8 +55,11 @@ def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
 def extract_text_snippets(tokenized_text,
                           window_size,
                           stride_length):
+
+    token_length = max(len(tokenized_text) - window_size * 2 + 1,
+                       1)
     text_snippets = [tokenized_text[i:i + window_size * 2]
-                     for i in range(0, len(tokenized_text) - window_size * 2 + 1, stride_length)]
+                     for i in range(0, token_length, stride_length)]
     return text_snippets
 
 
