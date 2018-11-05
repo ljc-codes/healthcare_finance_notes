@@ -39,10 +39,11 @@ class NoteViewer:
         as well as the percentage of notes that were positively tagged
         """
         num_records = len(self.data.index)
+        total_preds = self.data[self._prediction_column_name].notnull().sum()
 
-        coverage = self.data[self._prediction_column_name].isnull().sum() / num_records * 100
+        coverage = total_preds / num_records * 100
         print("Coverage: {0:.2f}%".format(coverage))
 
         positive_tags = (len(self.data[self.data[self._prediction_column_name] > self.threshold].index) /
-                         num_records) * 100
+                         total_preds) * 100
         print("Positive Tags: {0:.2f}%".format(positive_tags))
