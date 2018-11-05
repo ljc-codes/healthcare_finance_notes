@@ -15,9 +15,6 @@ tagger = NoteTagger(data=PandasDataframe,
                     text_column_name=str,
                     metadata_columns=[id_column_name,...])
 
-# print aggregate metrics
-tagger.quick_stats()
-
 # save predictions
 tagger.save_predictions(save_filepath=str)
 ```

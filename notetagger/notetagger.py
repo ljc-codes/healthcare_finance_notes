@@ -16,9 +16,6 @@ class NoteTagger:
                         text_column_name=str,
                         metadata_columns=[id_column_name,...])
 
-    # print aggregate metrics
-    tagger.quick_stats()
-
     # save predictions
     tagger.save_predictions(save_filepath=str)
     """
@@ -133,7 +130,6 @@ class NoteTagger:
         self.note_tag_predictions = (self._clean_data[self._metadata_columns + [self._prediction_column_name]]
                                      .groupby(self._metadata_columns)[self._prediction_column_name].max()
                                      .reset_index())
-        self.note_tag_predictions_all = self._merge_original_dataset()
 
     def tag_notes(self):
         """
@@ -154,55 +150,15 @@ class NoteTagger:
         self._model_window_size = window_size
         self._load_model_and_components()
 
-    def _merge_original_dataset(self, columns_to_include=[]):
-        """
-        Merge back in original dataset before tagging. Merge is done on `metadata_columns`
-
-        Arguments:
-            columns_to_include (list of str): columns to include in merge
-
-        Returns:
-            merged_data (Pandas DataFrame): pandas dataframe of merged notes
-        """
-        merged_data = self.note_tag_predictions.merge(
-            self._raw_data[self._metadata_columns + columns_to_include],
-            how='right',
-            on=self._metadata_columns)
-
-        return merged_data
-
-    def save_predictions(self, save_filepath, with_full_text=False):
+    def save_predictions(self, save_filepath):
         """
         Save the predictions to a jsonl file
 
         Arguments:
             save_filepath (str): path to save dataset to
-
-        Keyword Arguments:
-            with_full_text (bool): include the original note full text in the saved down dataset
         """
-        if with_full_text:
-            predictions_w_text = self._merge_original_dataset(columns_to_include=[self._text_column_name])
-            predictions_w_text.to_json(save_filepath,
-                                       orient='records',
-                                       lines=True)
-        else:
-            self.note_tag_predictions.to_json(save_filepath,
-                                              orient='records',
-                                              lines=True)
-
-    def quick_stats(self, threshold=0.5):
-        """
-        Display the percentage of notes that were tagged (`coverage`, may be less than 100% if `word_tags` were used)
-        as well as the percentage of notes that were positively tagged
-
-        Keyword Arguments:
-            threshold (float): probability threshold to be considered a positive tag
-        """
-        coverage = len(self.note_tag_predictions.index) / len(self._raw_data.index) * 100
-        print("Coverage: {0:.2f}%".format(coverage))
-
-        positive_tags = (len(self.note_tag_predictions
-                             [self.note_tag_predictions[self._prediction_column_name] > threshold].index) /
-                         len(self.note_tag_predictions.index)) * 100
-        print("Positive Tags: {0:.2f}%".format(positive_tags))
+        if self._verbose:
+            print("Saving at {}".format(save_filepath))
+        self.note_tag_predictions.to_json(save_filepath,
+                                          orient='records',
+                                          lines=True)
