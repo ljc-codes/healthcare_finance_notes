@@ -26,8 +26,11 @@ setuptools.setup(
             # extract data
             'extract-data=training.data_extraction:main',
 
+            # validate data
+            'note-viewer=notetagger.noteviewer:main',
+
             # train random forest
-            'train-rf=training.random_forest.rf_model_training:main'
+            'train-rf=training.random_forest.rf_model_training:main',
 
             # validate model
             'validate-model=training.validate_model:main',
