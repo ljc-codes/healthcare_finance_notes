@@ -227,12 +227,6 @@ def main():
                         type=str,
                         help='Name of text column')
 
-    parser.add_argument('--validation_data_path',
-                        '-v',
-                        required=True,
-                        type=str,
-                        help='Path to data on where user has flagged columns, must be jsonl')
-
     args = parser.parse_args()
 
     predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
@@ -243,7 +237,7 @@ def main():
                              join_column_names=args.join_columns,
                              text_column_name=args.text_column_name)
 
-    note_viewer.validate_predictions(validation_save_path=args.validation_data_path)
+    note_viewer.validate_predictions(validation_save_path=args.predictions_data_path)
 
 
 if __name__ == '__main__':
