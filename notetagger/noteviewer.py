@@ -83,7 +83,7 @@ def main():
                         type=str,
                         help='Path to predictions data must be jsonl')
 
-    parser.add_argument('--original_data',
+    parser.add_argument('--original_data_path',
                         '-o',
                         required=True,
                         type=str,
