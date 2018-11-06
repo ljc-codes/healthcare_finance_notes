@@ -15,7 +15,7 @@ setuptools.setup(
     ],
     extras_require={
         'training': [
-            'psycopg2',
+            'psycopg2-binary',
             'pymongo',
             'ipython',
         ]
