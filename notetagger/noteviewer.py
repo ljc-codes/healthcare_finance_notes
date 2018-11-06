@@ -16,26 +16,25 @@ class NoteViewer:
                  threshold=0.5):
 
         self._predictions_data = predictions_data
-        self.data = self._merge_dataset(predictions_data, original_data, join_column_names)
+        self._join_columns = join_column_names
+        self.data = self._merge_dataset(original_data)
         self._prediction_column_name = prediction_column_name
         self._validation_column_name = validation_column_name
         self.threshold = threshold
 
-    def _merge_dataset(self, predictions_data, original_data, join_columns):
+    def _merge_dataset(self, original_data):
         """
         Merge back in original dataset before tagging occured. Merge is done on `join_columns`
 
         Arguments:
-            predictions_data (Pandas DataFrame): predictions made by the `NoteTagger` class.
             original_data (Pandas DataFrame): dataset used by `NoteTagger` class to make predictions
-            join_columns (str or list of str): columns to make join the two dataframes on
 
         Returns:
             merged_data (Pandas DataFrame): pandas dataframe of merged notes
         """
-        merged_data = predictions_data.merge(original_data,
-                                             how='right',
-                                             on=join_columns)
+        merged_data = self._predictions_data.merge(original_data,
+                                                   how='right',
+                                                   on=self._join_columns)
 
         return merged_data
 
@@ -56,21 +55,27 @@ class NoteViewer:
 
     def _validation_set_generator(self):
         if self._validation_column_name not in self._predictions_data.columns:
-            self._predictions_data.columns[self._validation_column_name] = None
+            self._predictions_data[self._validation_column_name] = None
 
-        validation_set = self._predictions_data[self.predictions_data[self._validation_column_name].isnull()]
+        # TODO: Fix this
+        predictions_to_validate = (self._predictions_data[self._predictions_data[self._validation_column_name].isnull()]
+                                   [self._join_columns].tolist())
+        validation_set = self.data[self.data[self._join_columns].isin(predictions_to_validate)]
         for index, row in validation_set.iterrows():
             yield row
 
     def validate_predictions(self):
+        valid_inputs = ['y', 'n']
 
         for note in self._validation_set_generator():
             user_input = ''
-            while user_input not in ['y', 'n']:
+            while user_input not in valid_inputs:
                 print(note)
                 print()
                 print()
                 user_input = prompt('Note reflects tag (y/n)')
+                if user_input not in valid_inputs:
+                    print('Please enter y or n')
 
 
 def main():
