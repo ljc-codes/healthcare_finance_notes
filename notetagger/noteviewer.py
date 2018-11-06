@@ -12,29 +12,39 @@ class NoteViewer:
                  join_column_names,
                  text_column_name,
                  prediction_column_name=constants.PREDICTION_COLUMN_NAME,
-                 validation_column_name=constants.OUTCOME_COLUMN_NAME,
+                 validation_column_name='y_val',
+                 word_tags=constants.TAGS,
+                 text_window_before=300,
+                 text_window_after=100,
+                 text_window_increment=200,
                  threshold=0.5):
 
-        self._predictions_data = predictions_data
-        self._join_columns = join_column_names
-        self.data = self._merge_dataset(original_data)
+        self._prediction_data_columns = list(predictions_data.columns)
+        self.data = self._merge_dataset(predictions_data, original_data, join_column_names)
+        self._text_column_name = text_column_name
         self._prediction_column_name = prediction_column_name
         self._validation_column_name = validation_column_name
+        self._word_tags = word_tags
+        self._text_window_before = text_window_before
+        self._text_window_after = text_window_after
+        self._text_window_increment = text_window_increment
         self.threshold = threshold
 
-    def _merge_dataset(self, original_data):
+    def _merge_dataset(self, predictions_data, original_data, join_column_names):
         """
         Merge back in original dataset before tagging occured. Merge is done on `join_columns`
 
         Arguments:
+            predictions_data (Pandas DataFrame): dataset of predictions output by `NoteTagger` class
             original_data (Pandas DataFrame): dataset used by `NoteTagger` class to make predictions
+            join_column_names (list of str): columns to join dataset with
 
         Returns:
             merged_data (Pandas DataFrame): pandas dataframe of merged notes
         """
-        merged_data = self._predictions_data.merge(original_data,
-                                                   how='right',
-                                                   on=self._join_columns)
+        merged_data = predictions_data.merge(original_data,
+                                             how='right',
+                                             on=join_column_names)
 
         return merged_data
 
@@ -54,28 +64,130 @@ class NoteViewer:
         print("Positive Tags: {0:.2f}%".format(positive_tags))
 
     def _validation_set_generator(self):
-        if self._validation_column_name not in self._predictions_data.columns:
-            self._predictions_data[self._validation_column_name] = None
+        """
+        Generator that yields notes that need to be validated
 
-        # TODO: Fix this
-        predictions_to_validate = (self._predictions_data[self._predictions_data[self._validation_column_name].isnull()]
-                                   [self._join_columns].tolist())
-        validation_set = self.data[self.data[self._join_columns].isin(predictions_to_validate)]
+        Yields:
+            index (int): index of the specific record
+            row (dict): dict of data for a particular record
+        """
+        if self._validation_column_name not in self.data.columns:
+            self.data[self._validation_column_name] = None
+
+        # validate those records which have a prediction but no validation
+        validation_set = self.data[self.data[self._validation_column_name].isnull() &
+                                   self.data[self._prediction_column_name].notnull()]
         for index, row in validation_set.iterrows():
-            yield row
+            yield index, row
 
-    def validate_predictions(self):
-        valid_inputs = ['y', 'n']
+    def _print_note_text(self,
+                         full_note_text,
+                         word_tags,
+                         text_window_before,
+                         text_window_after):
+        """
+        Prints note text either a specific window around a word if given word tags or the entire text if not
 
-        for note in self._validation_set_generator():
+        Arguments:
+            full_note_text (str): entire text of note
+            word_tags (list of str): tags to find in notes and then print a window around. If None, the entire
+                note is printed
+            text_window_before (int): number of characters to print before tag
+            text_window_after (int): number of characteres to print after tag
+        """
+        if word_tags:
+            for word_tag in word_tags:
+                word_tag_index = full_note_text.find(word_tag)
+                if word_tag_index >= 0:
+                    print('\ntag: {}\n{}\n'.format(word_tag, len('tag: ' + word_tag) * '-'))
+                    text_snippet = full_note_text[max(0, word_tag_index - text_window_before):
+                                                  min(len(full_note_text),
+                                                      word_tag_index + text_window_after)]
+                    print('{}\n\n'.format(text_snippet))
+        else:
+            print(full_note_text)
+
+    def validate_predictions(self, validation_save_path):
+        """
+        Iterates through notes that have predictions but have not been validated by a person,
+        displaying a dialog box for the person to validate these notes. Each time a note is validated
+        the data (only those rows with predictions) is saved down
+
+        Arguments:
+            validation_save_path (str): path to save data to, should be jsonl
+        """
+
+        # initialize vars to handle user inputs
+        valid_inputs = ['y', 'n', 'q']
+        prompt_text = ("-----------------------------------\n"
+                       "Please choose one of the following:\n"
+                       "(y) flag note\n"
+                       "(n) don't flag note\n"
+                       "(q) quit validator\n")
+
+        # add some inputs if using word tags to find relevant text
+        if self._word_tags:
+            valid_inputs.extend(['b', 'a'])
+            additional_prompt_text = ("(b) increase window size before text\n"
+                                      "(a) increase window after text\n")
+            prompt_text += additional_prompt_text
+
+        # initialize columns and indices to use when saving down data
+        validation_data_columns = self._prediction_data_columns + [self._validation_column_name]
+        validation_data_filter_index = self.data[self._prediction_column_name].notnull()
+
+        # iterate through each record that needse to be validated
+        for index, note in self._validation_set_generator():
+
+            # initialize variables for individual note
+            text_window_before = self._text_window_before
+            text_window_after = self._text_window_after
             user_input = ''
-            while user_input not in valid_inputs:
-                print(note)
-                print()
-                print()
-                user_input = prompt('Note reflects tag (y/n)')
+
+            # keep displaying the note until the user enters a valid flag
+            while user_input not in ['y', 'n']:
+
+                # print note text
+                self._print_note_text(full_note_text=note[self._text_column_name],
+                                      word_tags=self._word_tags,
+                                      text_window_before=text_window_before,
+                                      text_window_after=text_window_after)
+
+                # print user prompt
+                user_input = prompt(prompt_text)
+
+                # handle user input
                 if user_input not in valid_inputs:
-                    print('Please enter y or n')
+                    print("\nPlease enter a valid input!")
+                    continue
+                elif user_input == 'q':
+                    print('\nQuitting Validator...')
+                    return
+                elif user_input == 'b':
+                    print('\nIncreasing text window before tag...')
+                    text_window_before += self._text_window_increment
+                elif user_input == 'a':
+                    print('\nIncreasing text window after tag...')
+                    text_window_after += self._text_window_increment
+                else:
+                    # user has entered a valid flag
+                    print('\nSaving validation flag...\n')
+
+                    # print number of records validated
+                    records_validated = (
+                        self.data[validation_data_filter_index][self._validation_column_name].notnull().sum()
+                    )
+                    pct_records_validated = records_validated / self.data[validation_data_filter_index].shape[0] * 100
+                    print('{} records validated, {:.0f}% of total records'.format(records_validated,
+                                                                                  pct_records_validated))
+
+                    # save flag to dataframe, converting to a boolean
+                    self.data.loc[index, self._validation_column_name] = (user_input == 'y')
+
+                    # save data to disk
+                    self.data[validation_data_filter_index][validation_data_columns].to_json(validation_save_path,
+                                                                                             orient='records',
+                                                                                             lines=True)
 
 
 def main():
@@ -107,6 +219,12 @@ def main():
                         type=str,
                         help='Name of text column')
 
+    parser.add_argument('--validation_data_path',
+                        '-v',
+                        required=True,
+                        type=str,
+                        help='Path to data on where user has flagged columns, must be jsonl')
+
     args = parser.parse_args()
 
     predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
@@ -117,7 +235,7 @@ def main():
                              join_column_names=args.join_columns,
                              text_column_name=args.text_column_name)
 
-    note_viewer.validate_predictions()
+    note_viewer.validate_predictions(validation_save_path=args.validation_data_path)
 
 
 if __name__ == '__main__':
