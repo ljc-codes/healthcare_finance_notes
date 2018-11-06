@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from prompt_toolkit import prompt
 
 from notetagger import constants
@@ -32,7 +33,8 @@ class NoteViewer:
 
     def _merge_dataset(self, predictions_data, original_data, join_column_names):
         """
-        Merge back in original dataset before tagging occured. Merge is done on `join_columns`
+        Merge back in original dataset before tagging occured. Merge is done on `join_columns` and then
+        data is shuffled to eliminate bias from validation
 
         Arguments:
             predictions_data (Pandas DataFrame): dataset of predictions output by `NoteTagger` class
@@ -45,6 +47,9 @@ class NoteViewer:
         merged_data = predictions_data.merge(original_data,
                                              how='right',
                                              on=join_column_names)
+
+        # shuffle data
+        merged_data = merged_data.reindex(np.random.permutation(merged_data.index))
 
         return merged_data
 
@@ -75,8 +80,11 @@ class NoteViewer:
             self.data[self._validation_column_name] = None
 
         # validate those records which have a prediction but no validation
-        validation_set = self.data[self.data[self._validation_column_name].isnull() &
-                                   self.data[self._prediction_column_name].notnull()]
+        validation_set_indices = (
+            self.data[self._validation_column_name].isnull() & self.data[self._prediction_column_name].notnull()
+        )
+        validation_set = self.data[validation_set_indices]
+
         for index, row in validation_set.iterrows():
             yield index, row
 
@@ -173,16 +181,16 @@ class NoteViewer:
                     # user has entered a valid flag
                     print('\nSaving validation flag...\n')
 
+                    # save flag to dataframe, converting to a boolean
+                    self.data.loc[index, self._validation_column_name] = (user_input == 'y')
+
                     # print number of records validated
                     records_validated = (
-                        self.data[validation_data_filter_index][self._validation_column_name].notnull().sum()
+                        self.data[validation_data_filter_index][self._validation_column_name].notnull().sum() + 1
                     )
                     pct_records_validated = records_validated / self.data[validation_data_filter_index].shape[0] * 100
                     print('{} records validated, {:.0f}% of total records'.format(records_validated,
                                                                                   pct_records_validated))
-
-                    # save flag to dataframe, converting to a boolean
-                    self.data.loc[index, self._validation_column_name] = (user_input == 'y')
 
                     # save data to disk
                     self.data[validation_data_filter_index][validation_data_columns].to_json(validation_save_path,
