@@ -13,7 +13,7 @@ class NoteViewer:
                  join_column_names,
                  text_column_name,
                  prediction_column_name=constants.PREDICTION_COLUMN_NAME,
-                 validation_column_name='y_val',
+                 validation_column_name=constants.VALIDATION_COLUMN_NAME,
                  word_tags=constants.TAGS,
                  text_window_before=300,
                  text_window_after=100,
@@ -60,13 +60,22 @@ class NoteViewer:
         """
         num_records = len(self.data.index)
         total_preds = self.data[self._prediction_column_name].notnull().sum()
+        total_validation = self.data[self._validation_column_name].notnull().sum()
 
-        coverage = total_preds / num_records * 100
-        print("Coverage: {0:.2f}%".format(coverage))
+        prediction_coverage = total_preds / num_records * 100
+        print("Prediction Coverage: {0:.2f}%".format(prediction_coverage))
 
         positive_tags = (len(self.data[self.data[self._prediction_column_name] > self.threshold].index) /
                          total_preds) * 100
-        print("Positive Tags: {0:.2f}%".format(positive_tags))
+        print("Prediction Positive Tags: {0:.2f}%".format(positive_tags))
+
+        validation_coverage = total_validation / total_preds * 100
+        print("Prediction Coverage: {0:.2f}%".format(validation_coverage))
+
+        prediction_accuracy = (len(self.data[(self.data[self._prediction_column_name] > self.threshold) &
+                                             (self.data[self._validation_column_name])].index) /
+                               total_preds) * 100
+        print("Prediction Accuracy: {0:.2f}%".format(prediction_accuracy))
 
     def _validation_set_generator(self):
         """
