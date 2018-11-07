@@ -7,6 +7,19 @@ from notetagger import constants
 
 
 class NoteViewer:
+    """
+    This class provides a command line interface to manually tag notes and compare them to predictions
+    made by a model
+
+    # initialize class
+    tagger = NoteViewer(predictions_data=PandasDataframe,
+                        original_data=PandasDataframe,
+                        join_column_names=[str,...],
+                        text_column_name=str)
+
+    # start validator
+    tagger.validate_predictions(validation_save_path=str)
+    """
 
     def __init__(self,
                  predictions_data,
@@ -17,9 +30,28 @@ class NoteViewer:
                  validation_column_name=constants.VALIDATION_COLUMN_NAME,
                  word_tags=constants.TAGS,
                  text_window_before=300,
-                 text_window_after=100,
-                 text_window_increment=200,
-                 threshold=0.5):
+                 text_window_after=10,
+                 text_window_increment=200):
+        """
+        Initialize NoteViewer Object
+
+        Arguments:
+            predictions_data (Pandas DataFrame): DataFrame containing model predictions on notes,
+                output by the `NoteTagger` class
+            original_data (Pandas DataFrame): DataFrame that was fed into the `NoteTagger` class to produce
+                predictions_data
+            join_column_names (list of str): list of column names to join `predictions_data` and `original_data`
+            text_column_name (str): name column with raw note text
+
+        Keyword Arguments:
+            prediction_column_name (str): name of column with model's predictions
+            validation_column_name (str): name of column that user's tags are saved to
+            word_tags (list of str): list of tags which the model predicted on. If `word_tags` were not used in
+                model predictions, should be set to None
+            text_window_before (int): number of characters to print before word tag
+            text_window_after (int): number of characters to print after tag
+            text_window_increment (int): number of characters to increase window by if user selects option
+        """
 
         self._prediction_data_columns = list(predictions_data.columns)
         self.data = self._merge_dataset(predictions_data, original_data, join_column_names)
@@ -30,7 +62,6 @@ class NoteViewer:
         self._text_window_before = text_window_before
         self._text_window_after = text_window_after
         self._text_window_increment = text_window_increment
-        self.threshold = threshold
 
     def _merge_dataset(self, predictions_data, original_data, join_column_names):
         """
@@ -82,6 +113,8 @@ class NoteViewer:
         thresholds = [i / 10 for i in range(4, 10)]
         for threshold in thresholds:
             print("Threshold: {:.1f}\n{}".format(threshold, '-' * 12))
+            print('Positive Predictions: {:.2f}'.format(len(self.data[self.data[self._prediction_column_name] >
+                                                        self.threshold].index) / total_preds))
             print("Accuracy: {:.2f}".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
             print("Precision: {:.2f}".format(precision_score(y_true=y_true, y_pred=y_pred > threshold)))
             print("Recall: {:.2f}\n".format(recall_score(y_true=y_true, y_pred=y_pred > threshold)))
@@ -246,6 +279,43 @@ def main():
                         type=str,
                         help='Name of text column')
 
+    parser.add_argument('--prediction_column_name',
+                        '-pc',
+                        default=constants.PREDICTION_COLUMN_NAME,
+                        type=str,
+                        help='Name of model prediction column')
+
+    parser.add_argument('--validation_column_name',
+                        '-vc',
+                        default=constants.VALIDATION_COLUMN_NAME,
+                        type=str,
+                        help='Name of user validation inputs column')
+
+    parser.add_argument('--word_tags',
+                        '-w',
+                        default=constants.TAGS,
+                        action='append',
+                        type=str,
+                        help='Tags on which the model predicted on')
+
+    parser.add_argument('--text_window_before',
+                        '-tb',
+                        default=300,
+                        type=int,
+                        help='Number of characters to print before word tag')
+
+    parser.add_argument('--text_window_after',
+                        '-ta',
+                        default=10,
+                        type=int,
+                        help='Number of characters to print after word tag')
+
+    parser.add_argument('--text_window_increment',
+                        '-ti',
+                        default=200,
+                        type=int,
+                        help='Number of characters to increase window by if user selects option')
+
     args = parser.parse_args()
 
     predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
@@ -254,7 +324,13 @@ def main():
     note_viewer = NoteViewer(predictions_data=predictions_data,
                              original_data=original_data,
                              join_column_names=args.join_columns,
-                             text_column_name=args.text_column_name)
+                             text_column_name=args.text_column_name,
+                             prediction_column_name=args.prediction_column_name,
+                             validation_column_name=args.validation_column_name,
+                             word_tags=args.word_tags,
+                             text_window_before=args.text_window_before,
+                             text_window_after=args.text_window_after,
+                             text_window_increment=args.text_window_increment)
 
     note_viewer.validate_predictions(validation_save_path=args.predictions_data_path)
 
