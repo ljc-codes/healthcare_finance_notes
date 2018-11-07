@@ -76,7 +76,7 @@ class NoteViewer:
         comparison_set = self.data[self.data[self._validation_column_name].notnull()]
         y_true = comparison_set[self._validation_column_name]
         y_pred = comparison_set[self._prediction_column_name]
-        print("AUC: {:.2f}\n".format(roc_auc_score(y_true=y_true, y_pred=y_pred)))
+        print("AUC: {:.2f}\n".format(roc_auc_score(y_true=y_true, y_score=y_pred)))
 
         # print metrics at various thresholds
         thresholds = [i / 10 for i in range(1, 10)]
