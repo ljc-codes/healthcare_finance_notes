@@ -82,8 +82,8 @@ class NoteViewer:
         thresholds = [i / 10 for i in range(1, 10)]
         for threshold in thresholds:
             print("Threshold: {:.1f}\n{}".format(threshold, '-' * 12))
-            print("Accuracy: {:.2f}\n".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
-            print("Precision: {:.2f}\n".format(precision_score(y_true=y_true, y_pred=y_pred > threshold)))
+            print("Accuracy: {:.2f}".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
+            print("Precision: {:.2f}".format(precision_score(y_true=y_true, y_pred=y_pred > threshold)))
             print("Recall: {:.2f}\n".format(recall_score(y_true=y_true, y_pred=y_pred > threshold)))
 
     def _validation_set_generator(self):
