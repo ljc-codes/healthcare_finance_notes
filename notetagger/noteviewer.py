@@ -79,7 +79,7 @@ class NoteViewer:
         print("AUC: {:.2f}\n".format(roc_auc_score(y_true=y_true, y_score=y_pred)))
 
         # print metrics at various thresholds
-        thresholds = [i / 10 for i in range(1, 10)]
+        thresholds = [i / 10 for i in range(4, 10)]
         for threshold in thresholds:
             print("Threshold: {:.1f}\n{}".format(threshold, '-' * 12))
             print("Accuracy: {:.2f}".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
