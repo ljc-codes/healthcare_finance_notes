@@ -73,18 +73,18 @@ class NoteViewer:
         validation_coverage = total_validation / total_preds * 100
         print("Validation Coverage: {0:.2f}%".format(validation_coverage))
 
-        comparison_set = self.data[self.data[self._validation_column_name.notnull()]]
+        comparison_set = self.data[self.data[self._validation_column_name].notnull()]
         y_true = comparison_set[self._validation_column_name]
         y_pred = comparison_set[self._prediction_column_name]
-        print("AUC: {:.2f}\n".format(accuracy_score(y_true=y_true, y_pred=y_pred)))
+        print("AUC: {:.2f}\n".format(roc_auc_score(y_true=y_true, y_pred=y_pred)))
 
         # print metrics at various thresholds
         thresholds = [i / 10 for i in range(1, 10)]
         for threshold in thresholds:
             print("Threshold: {:.1f}\n{}".format(threshold, '-' * 12))
             print("Accuracy: {:.2f}\n".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
-            print("Precision: {:.2f}\n".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
-            print("Recall: {:.2f}\n".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
+            print("Precision: {:.2f}\n".format(precision_score(y_true=y_true, y_pred=y_pred > threshold)))
+            print("Recall: {:.2f}\n".format(recall_score(y_true=y_true, y_pred=y_pred > threshold)))
 
     def _validation_set_generator(self):
         """
