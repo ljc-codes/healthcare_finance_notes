@@ -124,8 +124,14 @@ class NoteViewer:
             index (int): index of the specific record
             row (dict): dict of data for a particular record
         """
+
+        # create columns to keep when saving down validation data
+        self._validation_data_columns = self._prediction_data_columns
+
+        # if data has not been validated before, create a validation column
         if self._validation_column_name not in self.data.columns:
             self.data[self._validation_column_name] = None
+            self._validation_column_name = self._validation_data_columns + [self._validation_column_name]
 
         # validate those records which have a prediction but no validation
         validation_set_indices = (
@@ -188,8 +194,7 @@ class NoteViewer:
                                       "(a) increase window after text\n")
             prompt_text += additional_prompt_text
 
-        # initialize columns and indices to use when saving down data
-        validation_data_columns = self._prediction_data_columns + [self._validation_column_name]
+        # initialize indices to use when saving down data
         validation_data_filter_index = self.data[self._prediction_column_name].notnull()
 
         # iterate through each record that needse to be validated
@@ -242,9 +247,9 @@ class NoteViewer:
                                                                                   pct_records_validated))
 
                     # save data to disk
-                    self.data[validation_data_filter_index][validation_data_columns].to_json(validation_save_path,
-                                                                                             orient='records',
-                                                                                             lines=True)
+                    self.data[validation_data_filter_index][self._validation_data_columns].to_json(validation_save_path,
+                                                                                                   orient='records',
+                                                                                                   lines=True)
 
 
 def main():
