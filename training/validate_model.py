@@ -67,6 +67,7 @@ def validate_random_forest(data_path,
                            vectorizer_folder,
                            pca_folder,
                            model_folder,
+                           window_size,
                            threshold=0.5):
     """
     Calculates various metrics of performance on the random forest model and saves to MongoDB
@@ -80,6 +81,7 @@ def validate_random_forest(data_path,
         vectorizer_folder (str): folder with vectorizer in it
         pca_folder (str): folder with pca in it
         model_folder (str): folder with model in it
+        window_size (int): size of window around word tag to extract from data
 
     Keyword Arguments:
         threshold (float): threshold for positive class
@@ -92,7 +94,8 @@ def validate_random_forest(data_path,
         pca_name=pca_name,
         feature_engineering_config_path=feature_engineering_config_path,
         vectorizer_folder=vectorizer_folder,
-        pca_folder=pca_folder)
+        pca_folder=pca_folder,
+        window_size=window_size)
 
     model = file_system.load_component(function=None,
                                        data_input=None,
@@ -170,6 +173,12 @@ def main():
                         type=str,
                         help='Path to model folder')
 
+    parser.add_argument('--window_size',
+                        '-w',
+                        required=True,
+                        type=int,
+                        help='Size of window around tags')
+
     args = parser.parse_args()
 
     validate_random_forest(data_path=args.data_path,
@@ -179,4 +188,5 @@ def main():
                            feature_engineering_config_path=args.feature_engineering_config_path,
                            vectorizer_folder=args.vectorizer_folder,
                            pca_folder=args.pca_folder,
-                           model_folder=args.model_folder)
+                           model_folder=args.model_folder,
+                           window_size=args.window_size)

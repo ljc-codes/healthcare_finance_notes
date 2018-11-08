@@ -5,6 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 
 from notetagger import constants
+from notetagger.text_processing import process_text
 from training import file_system
 
 
@@ -62,6 +63,7 @@ def get_feature_set(data_path,
                     vectorizer_name,
                     pca_folder,
                     pca_name,
+                    window_size,
                     feature_column_name=constants.FEATURE_COLUMN_NAME,
                     outcome_column_name=constants.OUTCOME_COLUMN_NAME):
     """
@@ -69,9 +71,12 @@ def get_feature_set(data_path,
 
     Arguments:
         data_path (str): filepath to jsonl file with dataset
+        feature_engineering_config_path (str): path to feature engineering (tfidf, pca) config file
         vectorizer_folder (str): folder to tfidf vectorizer, if the folder does not exist a new one is created
         vectorizer_name (str): name of vectorizer, if the vectorizer does not exist it is created
-        tfidf_path (str): filepath to tfidf config, only used if vectorizer created
+        pca_folder (str): folder with pca in it
+        pca_name (str): name of pca file
+        window_size (int): size of window around word tag to extract from data
 
     Returns:
         X (numpy array): tfidf matrix
@@ -83,6 +88,10 @@ def get_feature_set(data_path,
     df = pd.read_json(data_path,
                       orient='records',
                       lines=True)
+
+    # cleans dataframe data
+    df_clean = process_text(df=df,
+                            window_size=window_size)
 
     # load tfidf and pca parameters
     with open(feature_engineering_config_path, "r") as f:
@@ -96,14 +105,14 @@ def get_feature_set(data_path,
 
     vectorizer = file_system.load_component(
         function=fit_tfidf,
-        data_input=df,
+        data_input=df_clean,
         component_folder=vectorizer_folder,
         component_name=vectorizer_name,
         component_config=feature_engineering_params["tfidf"],
         label="tfidf vectorizer")
 
     print("Transforming dataset with tfidf...")
-    X_full = vectorizer.transform(df[feature_column_name])
+    X_full = vectorizer.transform(df_clean[feature_column_name])
 
     pca = file_system.load_component(
         function=fit_pca,
@@ -116,6 +125,6 @@ def get_feature_set(data_path,
     print("Reducing dimensionality with pca...")
     X = pca.transform(X_full)
 
-    y = df[outcome_column_name].values
+    y = df_clean[outcome_column_name].values
 
     return X, y, feature_engineering_params

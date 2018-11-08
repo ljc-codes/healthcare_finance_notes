@@ -73,6 +73,7 @@ def train_random_forest(data_path,
                         vectorizer_folder,
                         pca_folder,
                         model_folder,
+                        window_size,
                         grid_search=False):
     """
     Loads data, transforms it with tf-idf (training a new vectorizer if necessary), grid searches
@@ -89,6 +90,7 @@ def train_random_forest(data_path,
         vectorizer_folder (str): folder with vectorizer in it
         pca_folder (str): folder with pca in it
         model_folder (str): folder with model in it
+        window_size (int): size of window around word tag to extract from data
 
     Keyword Arguments:
         grid_search (bool): run grid search over the model
@@ -100,7 +102,8 @@ def train_random_forest(data_path,
         vectorizer_folder=vectorizer_folder,
         vectorizer_name=vectorizer_name,
         pca_folder=pca_folder,
-        pca_name=pca_name)
+        pca_name=pca_name,
+        window_size=window_size)
 
     if grid_search:
 
@@ -205,6 +208,12 @@ def main():
                         type=str,
                         help='Path to model folder')
 
+    parser.add_argument('--window_size',
+                        '-w',
+                        required=True,
+                        type=int,
+                        help='Size of window around tags')
+
     args = parser.parse_args()
 
     train_random_forest(data_path=args.data_path,
@@ -217,4 +226,5 @@ def main():
                         vectorizer_folder=args.vectorizer_folder,
                         pca_folder=args.pca_folder,
                         model_folder=args.model_folder,
-                        grid_search=args.grid_search)
+                        grid_search=args.grid_search,
+                        window_size=args.window_size)

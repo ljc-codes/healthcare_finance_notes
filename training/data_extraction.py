@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from notetagger import constants
-from notetagger.text_processing import process_text
 
 
 def extract_notes(db_config,
@@ -72,42 +71,30 @@ def save_data(df, save_folder, filename):
                lines=True)
 
 
-def download_train_test_set(window_size,
-                            save_folder):
+def download_train_test_set(save_folder):
     """
     Downloads and saves training and test datasets
 
     Arguments:
-        window_size (int): number of tokens to get both before and after the `tag`
         save_folder (str): folder to save files to
     """
     df = extract_notes(os.environ["DB_CONFIG"])
-    df_clean = process_text(df=df,
-                            window_size=window_size)
-    train_df, test_df = split_df(df_clean)
+    train_df, test_df = split_df(df)
 
     # if save folder does not exist, create it
     if not os.path.exists(save_folder):
         os.makedirs(save_folder)
 
     # save train_df
-    train_filename = "training_ws{0}.jsonl".format(window_size)
-    save_data(train_df, save_folder, train_filename)
+    save_data(train_df, save_folder, "training_mimic.jsonl")
 
     # save test_df
-    test_filename = "testing_ws{0}.jsonl".format(window_size)
-    save_data(test_df, save_folder, test_filename)
+    save_data(test_df, save_folder, "testing_mimic.jsonl")
 
 
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--window_size',
-                        '-w',
-                        required=True,
-                        type=int,
-                        help='Window size of text snippet')
 
     parser.add_argument('--save_folder',
                         '-s',
@@ -117,5 +104,4 @@ def main():
 
     args = parser.parse_args()
 
-    download_train_test_set(window_size=args.window_size,
-                            save_folder=args.save_folder)
+    download_train_test_set(save_folder=args.save_folder)
