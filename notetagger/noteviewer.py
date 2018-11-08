@@ -97,10 +97,6 @@ class NoteViewer:
         prediction_coverage = total_preds / num_records * 100
         print("Prediction Coverage: {0:.2f}%".format(prediction_coverage))
 
-        positive_tags = (len(self.data[self.data[self._prediction_column_name] > self.threshold].index) /
-                         total_preds) * 100
-        print("Prediction Positive Tags: {0:.2f}%".format(positive_tags))
-
         validation_coverage = total_validation / total_preds * 100
         print("Validation Coverage: {0:.2f}%".format(validation_coverage))
 
@@ -114,7 +110,7 @@ class NoteViewer:
         for threshold in thresholds:
             print("Threshold: {:.1f}\n{}".format(threshold, '-' * 12))
             print('Positive Predictions: {:.2f}'.format(len(self.data[self.data[self._prediction_column_name] >
-                                                        self.threshold].index) / total_preds))
+                                                        threshold].index) / total_preds))
             print("Accuracy: {:.2f}".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
             print("Precision: {:.2f}".format(precision_score(y_true=y_true, y_pred=y_pred > threshold)))
             print("Recall: {:.2f}\n".format(recall_score(y_true=y_true, y_pred=y_pred > threshold)))
@@ -238,7 +234,7 @@ class NoteViewer:
 
                     # print number of records validated
                     records_validated = (
-                        self.data[validation_data_filter_index][self._validation_column_name].notnull().sum() + 1
+                        self.data[validation_data_filter_index][self._validation_column_name].notnull().sum()
                     )
                     pct_records_validated = records_validated / self.data[validation_data_filter_index].shape[0] * 100
                     print('{} records validated, {:.0f}% of total records'.format(records_validated,
