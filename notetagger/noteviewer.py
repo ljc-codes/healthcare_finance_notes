@@ -82,6 +82,7 @@ class NoteViewer:
 
         # shuffle data
         merged_data = merged_data.reindex(np.random.permutation(merged_data.index))
+        merged_data.reset_index(inplace=True)
 
         return merged_data
 
