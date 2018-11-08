@@ -158,7 +158,7 @@ class NoteViewer:
         """
         if word_tags:
             for word_tag in word_tags:
-                word_tag_index = full_note_text.lower().find(word_tag)
+                word_tag_index = full_note_text.lower().find(word_tag.replace('_', ' '))
                 if word_tag_index >= 0:
                     print('\ntag: {}\n{}\n'.format(word_tag, len('tag: ' + word_tag) * '-'))
                     text_snippet = full_note_text[max(0, word_tag_index - text_window_before):

@@ -10,21 +10,30 @@ STOPWORDS = set(nltk.corpus.stopwords.words('english'))
 PUNCTUATION = set(string.punctuation)
 
 
-def clean_text(text):
+def clean_text(text,
+               tags=None):
     """
     Removes punctuation, tokenizes text, lower cases it, and removes stop words
 
     Arguments:
         text (str): document
 
+    Keyword Arguments:
+        tags (list of str): List of specific terms to create specialized tokens out of it they have
+            'spaces' (represented by `_`) in them. If None no specialized tokens are created
+
     Returns:
         clean_text (list of str): list of tokens
     """
 
-    # create token for out of pocket
-    text_oop = text.replace('out of pocket', 'outofpocket')
+    # ensure that tags with spaces in them are tokenized
+    if tags:
+        for word in tags:
+            if '_' in word:
+                tag_w_space = word.replace('_', ' ')
+                text = text.replace(tag_w_space, word)
 
-    tokenized_text = nltk.word_tokenize(text_oop)
+    tokenized_text = nltk.word_tokenize(text)
     lower_case_words = [word.lower() for word in tokenized_text if word.isalpha()]
     clean_text = [word for word in lower_case_words if word not in STOPWORDS]
     return clean_text
@@ -96,7 +105,7 @@ def process_text(df,
     # get labeled data by looping through each row and extracting text snippets
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
 
-        row["clean_text"] = clean_text(row[text_column_name])
+        row["clean_text"] = clean_text(row[text_column_name], tags)
 
         if tags:
             # if creating snippets around specific tags, extract snippets for each tag and then flatten the list

@@ -1,12 +1,12 @@
 NOTE_ID_COLUMN_NAME = "note_id"
-TAGS = ["cost",
+TAGS = ["_cost_",
         "insurance",
         "pay",
         "financial",
         "expense",
         "afford",
         "medicare",
-        "outofpocket",
+        "out_of_pocket",
         "expensive",
         "costly"]
 TEXT_COLUMN_NAME = "text"
