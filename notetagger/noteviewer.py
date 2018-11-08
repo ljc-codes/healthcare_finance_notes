@@ -102,7 +102,7 @@ class NoteViewer:
         print("Validation Coverage: {0:.2f}%".format(validation_coverage))
 
         comparison_set = self.data[self.data[self._validation_column_name].notnull()]
-        y_true = comparison_set[self._validation_column_name]
+        y_true = comparison_set[self._validation_column_name].astype('float64')
         y_pred = comparison_set[self._prediction_column_name]
         print("AUC: {:.2f}\n".format(roc_auc_score(y_true=y_true, y_score=y_pred)))
 
