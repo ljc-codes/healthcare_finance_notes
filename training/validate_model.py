@@ -103,6 +103,8 @@ def validate_random_forest(data_path,
                                        component_name=model_name,
                                        component_config=None,
                                        label='model')
+
+    print("Making predictions...")
     y_pred = model.predict_proba(X_test)
     y_pred_val = model.predict(X_test)
 
@@ -113,6 +115,7 @@ def validate_random_forest(data_path,
         "recall": '{:.4f}'.format(recall_score(y_true=y_test, y_pred=y_pred_val))
     }
 
+    print("Storing results...")
     model_result = create_model_result_document(model_type='random_forest',
                                                 scores=scores,
                                                 metadata=feature_engineering_config,
