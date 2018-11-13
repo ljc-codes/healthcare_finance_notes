@@ -151,25 +151,25 @@ def main():
 
     parser.add_argument('--feature_engineering_config_path',
                         '-f',
-                        default=os.getcwd() + 'random_forest/feature_engineering_config.json',
+                        default=os.path.join(os.getcwd(), 'random_forest/feature_engineering_config.json'),
                         type=str,
                         help='Path to feature engineering configuration file')
 
     parser.add_argument('--vectorizer_folder',
                         '-vf',
-                        default=os.getcwd() + 'random_forest/vectorizers',
+                        default=os.path.join(os.getcwd(), 'random_forest/vectorizers'),
                         type=str,
                         help='Path to vectorizer folder')
 
     parser.add_argument('--pca_folder',
                         '-pf',
-                        default=os.getcwd() + 'random_forest/pca',
+                        default=os.path.join(os.getcwd(), 'random_forest/pca'),
                         type=str,
                         help='Path to pca folder')
 
     parser.add_argument('--model_folder',
                         '-mf',
-                        default=os.getcwd() + 'random_forest/models',
+                        default=os.path.join(os.getcwd(), 'random_forest/models'),
                         type=str,
                         help='Path to model folder')
 
