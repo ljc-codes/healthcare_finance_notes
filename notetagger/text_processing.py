@@ -1,4 +1,4 @@
-import string
+import re
 
 import nltk
 from tqdm import tqdm
@@ -7,11 +7,10 @@ import pandas as pd
 from notetagger import constants
 
 STOPWORDS = set(nltk.corpus.stopwords.words('english'))
-PUNCTUATION = set(string.punctuation)
 
 
-def clean_text(text,
-               tags=None):
+def tokenize_text(text,
+                  tags=None):
     """
     Removes punctuation, tokenizes text, lower cases it, and removes stop words
 
@@ -23,20 +22,24 @@ def clean_text(text,
             'spaces' (represented by `_`) in them. If None no specialized tokens are created
 
     Returns:
-        clean_text (list of str): list of tokens
+        tokenize_text (list of str): list of tokens
     """
+
+    # strip everything except for letters and spaces
+    regex = re.compile('[^a-zA-Z ]')
+    clean_text = regex.sub('', text)
 
     # ensure that tags with spaces in them are tokenized
     if tags:
         for word in tags:
             if '_' in word:
                 tag_w_space = word.replace('_', ' ')
-                text = text.replace(tag_w_space, word)
+                clean_text = clean_text.replace(tag_w_space, ' ' + word + ' ')
 
-    tokenized_text = nltk.word_tokenize(text)
-    lower_case_words = [word.lower() for word in tokenized_text if word.isalpha()]
-    clean_text = [word for word in lower_case_words if word not in STOPWORDS]
-    return clean_text
+    # tokenize text
+    tokens = nltk.word_tokenize(clean_text)
+    tokenize_text = [word.lower() for word in tokens if word not in STOPWORDS]
+    return tokenize_text
 
 
 def extract_text_snippets_with_tags(tokenized_text, tags, window_size):
@@ -105,16 +108,16 @@ def process_text(df,
     # get labeled data by looping through each row and extracting text snippets
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
 
-        row["clean_text"] = clean_text(row[text_column_name], tags)
+        row["tokenize_text"] = tokenize_text(row[text_column_name], tags)
 
         if tags:
             # if creating snippets around specific tags, extract snippets for each tag and then flatten the list
-            text_snippets = extract_text_snippets_with_tags(tokenized_text=row["clean_text"],
+            text_snippets = extract_text_snippets_with_tags(tokenized_text=row["tokenize_text"],
                                                             window_size=window_size,
                                                             tags=tags)
         else:
             # if not using tags, extract sliding window over text
-            text_snippets = extract_text_snippets(tokenized_text=row["clean_text"],
+            text_snippets = extract_text_snippets(tokenized_text=row["tokenize_text"],
                                                   window_size=window_size,
                                                   stride_length=stride_length)
 
