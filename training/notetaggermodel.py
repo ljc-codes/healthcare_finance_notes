@@ -93,6 +93,7 @@ class NoteTaggerModelTrain:
 
         self._model_validation_result = {
             "model_id": "random_forest_" + datetime.today().strftime('%Y-%m-%dv%H-%m'),
+            "config": self._config,
             "performance_metrics": {
                 "auc": '{:.4f}'.format(roc_auc_score(y_true=y_val, y_score=y_pred_prob)),
                 "metrics_by_threshold": []
