@@ -75,12 +75,14 @@ class NoteTaggerModelTrain:
         self._model = self._base_model(**self._config['model_config'])
         self._model.fit(X_train, y_train)
 
-    def train_model(self):
+    def train_model(self, validation_data=None, store_result=True):
         X_train, y_train = self._process_text(raw_data=self._raw_data)
         self._fit_model(X_train=X_train, y_train=y_train)
         self._create_saved_model()
+        if validation_data:
+            self._validate_model(validation_data=validation_data, store_result=store_result)
 
-    def _validate_model(self, validation_data, store_result):
+    def _validate_model(self, validation_data, store_result=True):
         note_tag_predictions = self._trained_model.predict_tag(
             data=validation_data,
             text_column_name=self._text_column_name,
