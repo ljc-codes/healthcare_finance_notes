@@ -26,6 +26,9 @@ setuptools.setup(
             # extract data
             'extract-data=training.data_extraction:main',
 
+            # run predictions and save to file
+            'predict-tags=scripts.tag_notes:main',
+
             # validate data
             'note-viewer=notetagger.noteviewer:main',
 
