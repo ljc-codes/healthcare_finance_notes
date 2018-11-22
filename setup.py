@@ -30,7 +30,7 @@ setuptools.setup(
             'predict-tags=scripts.tag_notes:main',
 
             # validate data
-            'note-viewer=notetagger.noteviewer:main',
+            'note-tagger-viewer=notetagger.notetagger:main',
 
             # display training results
             'display-training-results=scripts.display_training_results:display_training_results',

@@ -13,9 +13,9 @@ class NoteTagger:
     made by a model
 
     # initialize class
-    tagger = NoteViewer(predictions_data=PandasDataframe,
+    tagger = NoteTagger(predictions_data=PandasDataframe,
                         original_data=PandasDataframe,
-                        join_column_names=[str,...],
+                        metadata_columns=[str,...],
                         text_column_name=str)
 
     # start validator
@@ -38,15 +38,16 @@ class NoteTagger:
         Initialize NoteViewer Object
 
         Arguments:
-            original_data (Pandas DataFrame): DataFrame that was fed into the `NoteTagger` class to produce
-                predictions_data
+            original_data (Pandas DataFrame): DataFrame that was fed into a `NoteTaggerTrainedModel`
+                to produce predictions_data
             predictions_data (Pandas DataFrame): DataFrame containing model predictions on notes,
-                output by the `NoteTagger` class
+                output by the `NoteTaggerTrainedModel`. If `None`, this will be calculated at initialization
             text_column_name (str): name column with raw note text
-            metadata_columns (list of str): list of column names to join `predictions_data` and `original_data`
+            metadata_columns (list of str): list of column names to include with `predictions_data`. Used
+                to join `predictions_data` and `original_data`
 
         Keyword Arguments:
-            model_path (str)
+            model_path (str): path to model, only used if `predictions_data` is `None`
             prediction_column_name (str): name of column with model's predictions
             validation_column_name (str): name of column that user's tags are saved to
             word_tags (list of str): list of tags which the model predicted on. If `word_tags` were not used in
@@ -70,15 +71,12 @@ class NoteTagger:
     def _create_dataset(self, original_data, predictions_data):
         """
         Merge back in original dataset before tagging occured. Merge is done on `join_columns` and then
-        data is shuffled to eliminate bias from validation
+        data is shuffled to eliminate bias from validation.
 
         Arguments:
-            predictions_data (Pandas DataFrame): dataset of predictions output by `NoteTagger` class
-            original_data (Pandas DataFrame): dataset used by `NoteTagger` class to make predictions
-            join_column_names (list of str): columns to join dataset with
-
-        Returns:
-            merged_data (Pandas DataFrame): pandas dataframe of merged notes
+            predictions_data (Pandas DataFrame): dataset of predictions output by `NoteTaggerTrainedModel`.
+                If `None`, the model is loaded and predictions are made
+            original_data (Pandas DataFrame): dataset used by `NoteTaggerTrainedModel` to make predictions
         """
 
         # check if predictions data is provided
@@ -264,12 +262,15 @@ class NoteTagger:
 
 
 def main():
+    """
+    Command line handler for the script. Includes handling for loading jsonl data and saving jsonl data
+    """
     import argparse
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--predictions_data_path',
                         '-p',
-                        required=True,
+                        default=None,
                         type=str,
                         help='Path to predictions data must be jsonl')
 
@@ -279,12 +280,12 @@ def main():
                         type=str,
                         help='Path to data on which predictions were made (contains the note text), must be jsonl')
 
-    parser.add_argument('--join_columns',
-                        '-j',
+    parser.add_argument('--metadata_columns',
+                        '-md',
                         required=True,
                         action='append',
                         type=str,
-                        help='Column on which to join the datasets on')
+                        help='Column(s) on which to join the datasets on')
 
     parser.add_argument('--text_column_name',
                         '-t',
@@ -329,24 +330,27 @@ def main():
                         type=int,
                         help='Number of characters to increase window by if user selects option')
 
+    parser.add_argument('--model_path',
+                        '-m',
+                        default=None,
+                        type=str,
+                        help='Path to model to use to make predictions data')
+
     args = parser.parse_args()
 
     predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
     original_data = pd.read_json(args.original_data_path, orient='records', lines=True)
 
-    note_viewer = NoteViewer(predictions_data=predictions_data,
+    note_viewer = NoteTagger(predictions_data=predictions_data,
                              original_data=original_data,
-                             join_column_names=args.join_columns,
+                             metadata_columns=args.metadata_columns,
                              text_column_name=args.text_column_name,
                              prediction_column_name=args.prediction_column_name,
                              validation_column_name=args.validation_column_name,
                              word_tags=args.word_tags,
                              text_window_before=args.text_window_before,
                              text_window_after=args.text_window_after,
-                             text_window_increment=args.text_window_increment)
+                             text_window_increment=args.text_window_increment,
+                             model_path=args.model_path)
 
     note_viewer.validate_predictions(validation_save_path=args.predictions_data_path)
-
-
-if __name__ == '__main__':
-    main()
