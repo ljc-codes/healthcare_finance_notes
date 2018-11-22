@@ -12,6 +12,7 @@ from notetagger import constants
 class NoteTaggerModelTrain:
 
     def __init__(self,
+                 model_name,
                  data,
                  text_column_name,
                  outcome_column_name,
@@ -22,24 +23,29 @@ class NoteTaggerModelTrain:
                  tokens_column_name=constants.FEATURE_COLUMN_NAME,
                  grid_search=False):
 
+        self._model_id = model_name + datetime.today().strftime('%Y-%m-%dv%H-%m')
         self._raw_data = data
         self._text_column_name = text_column_name
         self._outcome_column_name = outcome_column_name
-        self._window_size = window_size
-        self._model_save_path = model_save_path
-        self._word_tags = word_tags
-        self._stride_length = stride_length
-        self._grid_search = grid_search
+        self._model_save_file = os.path.join(model_save_path, self._model_id) + '.pkl'
+
+        self._config = {"notetagger_params": {}}
+        self._config["notetagger_params"]['window_size'] = window_size
+        self._config["notetagger_params"]['word_tags'] = word_tags
+        self._config["notetagger_params"]['stride_length'] = stride_length
+        self._config["notetagger_params"]['grid_search'] = grid_search
 
     def _tokenize_text(self, raw_data):
 
-        tokenized_data = text_processing.process_text(df=raw_data,
-                                                      window_size=self._window_size,
-                                                      tags=self._word_tags,
-                                                      stride_length=self._stride_length,
-                                                      text_column_name=self._text_column_name,
-                                                      columns_to_keep=self._outcome_column_name,
-                                                      feature_column_name='tokenized_text')
+        print("Tokenizing Data")
+        tokenized_data = text_processing.process_text(
+            df=raw_data,
+            window_size=self._config["notetagger_params"]['window_size'],
+            tags=self._config["notetagger_params"]['word_tags'],
+            stride_length=self._config["notetagger_params"]['stride_length'],
+            text_column_name=self._text_column_name,
+            columns_to_keep=[self._outcome_column_name],
+            feature_column_name='tokenized_text')
 
         return tokenized_data
 
@@ -53,6 +59,7 @@ class NoteTaggerModelTrain:
         """
 
         # initialize grid search object
+        print("Running Grid Search")
         self._model_cv = GridSearchCV(estimator=self._base_model,
                                       param_grid=self._config['grid_search']['parameters'],
                                       scoring=self._config['grid_search']['scoring_metric'],
@@ -61,7 +68,7 @@ class NoteTaggerModelTrain:
         self._model_cv.fit(X_train, y_train)
 
         # select best performing model
-        self._config['model_config'] = self._model_cv.best_params_
+        self._config['model_params']['model_config'] = self._model_cv.best_params_
 
     def _fit_model(self,
                    X_train,
@@ -69,20 +76,22 @@ class NoteTaggerModelTrain:
         """
         Fits a model to training data
         """
-        if self._grid_search:
+        print("Training Model")
+        if self._config["notetagger_params"]['grid_search']:
             self._grid_seach_model()
 
-        self._model = self._base_model(**self._config['model_config'])
+        self._model = self._base_model(**self._config['model_params']['model_config'])
         self._model.fit(X_train, y_train)
 
     def train_model(self, validation_data=None, store_result=True):
         X_train, y_train = self._process_text(raw_data=self._raw_data)
         self._fit_model(X_train=X_train, y_train=y_train)
         self._create_saved_model()
-        if validation_data:
+        if validation_data is not None:
             self._validate_model(validation_data=validation_data, store_result=store_result)
 
     def _validate_model(self, validation_data, store_result=True):
+        print("Validating Model")
         note_tag_predictions = self._trained_model.predict_tag(
             data=validation_data,
             text_column_name=self._text_column_name,
@@ -94,7 +103,7 @@ class NoteTaggerModelTrain:
         y_pred_prob = note_tag_predictions['y_pred']
 
         self._model_validation_result = {
-            "model_id": "random_forest_" + datetime.today().strftime('%Y-%m-%dv%H-%m'),
+            "model_id": self._model_id,
             "config": self._config,
             "performance_metrics": {
                 "auc": '{:.4f}'.format(roc_auc_score(y_true=y_val, y_score=y_pred_prob)),
@@ -113,17 +122,13 @@ class NoteTaggerModelTrain:
             )
 
         if store_result:
-            self._store_validation_result(model_validation_result=self._model_validation_result)
+            self._store_validation_result()
 
     def _store_validation_result(self,
-                                 model_validation_result,
                                  db_name=constants.MONGO_DATABASE_NAME,
                                  collection_name=constants.MONGO_COLLECTION_NAME):
         """
         Store model in MongoDB and prints id
-
-        Arguments:
-            model_validation_result (dict): dictionary holding various info on the model result
 
         Keyword Arguments:
             db_name (str): name of database in MongoDB
@@ -132,7 +137,7 @@ class NoteTaggerModelTrain:
         client = MongoClient(os.environ["MONGO_CONFIG"])
         db = client[db_name]
         collection = db[collection_name]
-        result_id = collection.insert_one(model_validation_result).inserted_id
+        result_id = collection.insert_one(self._model_validation_result).inserted_id
         print("Result {} saved".format(result_id))
 
     def _process_text(self, raw_data):
@@ -146,14 +151,14 @@ class NoteTaggerTrainedModel:
 
     def __init__(self,
                  window_size,
-                 config,
+                 model_config,
                  word_tags=constants.TAGS,
                  stride_length=None):
 
         self._window_size = window_size
         self._word_tags = word_tags
         self._stride_length = stride_length
-        self._config = config
+        self._config = model_config
 
     def predict_tag(self, data, text_column_name, metadata_columns, prediction_column_name):
         raise NotImplementedError
