@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 from training.notetaggermodel import NoteTaggerModelTrain
 from training.notetaggermodel import NoteTaggerTrainedModel
-from notetagger import text_processing
+from training import text_processing
 from notetagger import constants
 
 

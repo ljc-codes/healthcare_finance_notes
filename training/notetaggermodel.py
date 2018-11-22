@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
 
-from notetagger import text_processing
+from training import text_processing
 from notetagger import constants
 
 
