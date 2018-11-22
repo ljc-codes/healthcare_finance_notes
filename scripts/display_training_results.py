@@ -17,8 +17,7 @@ def display_training_results():
     # print out results
     for doc in collection.find():
         for key in doc:
-            if key not in ['metadata', '_id', 'date']:
-                print(key, doc[key])
+            print(key, doc[key])
         print('\n')
 
 

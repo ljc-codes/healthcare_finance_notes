@@ -29,12 +29,6 @@ setuptools.setup(
             # validate data
             'note-viewer=notetagger.noteviewer:main',
 
-            # train random forest
-            'train-rf=training.random_forest.rf_model_training:main',
-
-            # validate model
-            'validate-model=training.validate_model:main',
-
             # display training results
             'display-training-results=scripts.display_training_results:display_training_results',
         }
