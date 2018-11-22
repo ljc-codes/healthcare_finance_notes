@@ -3,10 +3,10 @@ import os
 
 from pymongo import MongoClient
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
 
 from training import text_processing
 from notetagger import constants
+from notetagger import metrics_calculation
 
 
 class NoteTaggerModelTrain:
@@ -105,21 +105,8 @@ class NoteTaggerModelTrain:
         self._model_validation_result = {
             "model_id": self._model_id,
             "config": self._config,
-            "performance_metrics": {
-                "auc": '{:.4f}'.format(roc_auc_score(y_true=y_val, y_score=y_pred_prob)),
-                "metrics_by_threshold": []
-            }
+            "performance_metrics": metrics_calculation.calculate_performance_metrics(y_val, y_pred_prob)
         }
-
-        for threshold in range(3, 10):
-            threshold /= 10
-            y_pred = y_pred_prob > threshold
-            self._model_validation_result["performance_metrics"]["metrics_by_threshold"].append(
-                {"threshold": '{:.1f}'.format(threshold),
-                 "accuracy": '{:.4f}'.format(accuracy_score(y_true=y_val, y_pred=y_pred)),
-                 "precision": '{:.4f}'.format(precision_score(y_true=y_val, y_pred=y_pred)),
-                 "recall": '{:.4f}'.format(recall_score(y_true=y_val, y_pred=y_pred))}
-            )
 
         if store_result:
             self._store_validation_result()

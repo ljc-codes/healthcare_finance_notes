@@ -1,9 +1,10 @@
+import dill as pickle
 import pandas as pd
 import numpy as np
 from prompt_toolkit import prompt
-from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 
 from notetagger import constants
+from notetagger import metrics_calcuation
 
 
 class NoteTagger:
@@ -22,13 +23,14 @@ class NoteTagger:
     """
 
     def __init__(self,
-                 predictions_data,
                  original_data,
-                 join_column_names,
+                 predictions_data,
                  text_column_name,
+                 metadata_columns,
+                 model_path=None,
+                 word_tags=constants.TAGS,
                  prediction_column_name=constants.PREDICTION_COLUMN_NAME,
                  validation_column_name=constants.VALIDATION_COLUMN_NAME,
-                 word_tags=constants.TAGS,
                  text_window_before=300,
                  text_window_after=10,
                  text_window_increment=200):
@@ -36,14 +38,15 @@ class NoteTagger:
         Initialize NoteViewer Object
 
         Arguments:
-            predictions_data (Pandas DataFrame): DataFrame containing model predictions on notes,
-                output by the `NoteTagger` class
             original_data (Pandas DataFrame): DataFrame that was fed into the `NoteTagger` class to produce
                 predictions_data
-            join_column_names (list of str): list of column names to join `predictions_data` and `original_data`
+            predictions_data (Pandas DataFrame): DataFrame containing model predictions on notes,
+                output by the `NoteTagger` class
             text_column_name (str): name column with raw note text
+            metadata_columns (list of str): list of column names to join `predictions_data` and `original_data`
 
         Keyword Arguments:
+            model_path (str)
             prediction_column_name (str): name of column with model's predictions
             validation_column_name (str): name of column that user's tags are saved to
             word_tags (list of str): list of tags which the model predicted on. If `word_tags` were not used in
@@ -52,18 +55,19 @@ class NoteTagger:
             text_window_after (int): number of characters to print after tag
             text_window_increment (int): number of characters to increase window by if user selects option
         """
-
-        self._prediction_data_columns = list(predictions_data.columns)
-        self.data = self._merge_dataset(predictions_data, original_data, join_column_names)
         self._text_column_name = text_column_name
+        self._metadata_columns = metadata_columns
+        self._model_path = model_path
+        self._word_tags = word_tags
         self._prediction_column_name = prediction_column_name
         self._validation_column_name = validation_column_name
-        self._word_tags = word_tags
         self._text_window_before = text_window_before
         self._text_window_after = text_window_after
         self._text_window_increment = text_window_increment
 
-    def _merge_dataset(self, predictions_data, original_data, join_column_names):
+        self._create_dataset(original_data, predictions_data)
+
+    def _create_dataset(self, original_data, predictions_data):
         """
         Merge back in original dataset before tagging occured. Merge is done on `join_columns` and then
         data is shuffled to eliminate bias from validation
@@ -76,14 +80,31 @@ class NoteTagger:
         Returns:
             merged_data (Pandas DataFrame): pandas dataframe of merged notes
         """
-        merged_data = predictions_data.merge(original_data,
-                                             how='right',
-                                             on=join_column_names)
+
+        # check if predictions data is provided
+        if predictions_data is None:
+
+            # load model
+            with open(self._model_path, 'rb') as f:
+                model = pickle.load(f)
+
+            # create predictions dataset
+            predictions_data = model.predict_tag(
+                data=original_data,
+                text_column_name=self._text_column_name,
+                metadata_columns=self._metadata_columns,
+                prediction_column_name=self._prediction_column_name)
+
+        # get columns unique to prediction data, used for saving it down after user tags
+        self._prediction_data_columns = list(predictions_data.columns)
+
+        # merge predictions data with original data
+        self._dataset = predictions_data.merge(original_data,
+                                               how='right',
+                                               on=self._metadata_columns)
 
         # shuffle data
-        merged_data = merged_data.reindex(np.random.permutation(merged_data.index))
-
-        return merged_data
+        self._dataset = self._dataset.reindex(np.random.permutation(self._dataset.index))
 
     def quick_stats(self):
         """
@@ -100,20 +121,11 @@ class NoteTagger:
         validation_coverage = total_validation / total_preds * 100
         print("Validation Coverage: {0:.2f}%".format(validation_coverage))
 
+        # print performance metrics at various thresholds
         comparison_set = self.data[self.data[self._validation_column_name].notnull()]
         y_true = comparison_set[self._validation_column_name].astype('float64')
         y_pred = comparison_set[self._prediction_column_name]
-        print("AUC: {:.2f}\n".format(roc_auc_score(y_true=y_true, y_score=y_pred)))
-
-        # print metrics at various thresholds
-        thresholds = [i / 10 for i in range(4, 10)]
-        for threshold in thresholds:
-            print("Threshold: {:.1f}\n{}".format(threshold, '-' * 12))
-            print('Positive Predictions: {:.2f}'.format(len(self.data[self.data[self._prediction_column_name] >
-                                                        threshold].index) / total_preds))
-            print("Accuracy: {:.2f}".format(accuracy_score(y_true=y_true, y_pred=y_pred > threshold)))
-            print("Precision: {:.2f}".format(precision_score(y_true=y_true, y_pred=y_pred > threshold)))
-            print("Recall: {:.2f}\n".format(recall_score(y_true=y_true, y_pred=y_pred > threshold)))
+        print(metrics_calcuation.calculate_performance_metrics(y_true, y_pred))
 
     def _validation_set_generator(self):
         """
