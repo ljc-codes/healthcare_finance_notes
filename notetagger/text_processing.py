@@ -105,6 +105,9 @@ def process_text(df,
     """
     labeled_data = []
 
+    # create note_id counter
+    note_id = 0
+
     # get labeled data by looping through each row and extracting text snippets
     for index, row in tqdm(df.iterrows(), total=df.shape[0]):
 
@@ -125,10 +128,16 @@ def process_text(df,
         for snippet in text_snippets:
             data_point = {feature_column_name: snippet}
 
+            # set id for data point
+            data_point["_id"] = note_id
+
             for column in columns_to_keep:
                 data_point[column] = row[column]
 
             labeled_data.append(data_point)
+
+        # increment note id
+        note_id += 1
 
     labeled_df = pd.DataFrame(labeled_data)
 

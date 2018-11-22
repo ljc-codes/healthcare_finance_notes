@@ -41,7 +41,7 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
 
         self._base_model = RandomForestClassifier()
 
-    def _fit_tfidf(self):
+    def _fit_tfidf(self, tokenized_data):
         """
         Fits a tf-idf vectorizer on a provided dataframe
 
@@ -58,9 +58,10 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
                                            token_pattern=None,
                                            **self._config['tfidf_config'])
 
-        self._vectorized_data = self._vectorizer.fit_transform(self.tokenized_data['tokenized_text'])
+        vectorized_data = self._vectorizer.fit_transform(tokenized_data['tokenized_text'])
+        return vectorized_data
 
-    def _fit_pca(self):
+    def _fit_pca(self, vectorized_data):
         """
         Fits an PCA component to a provided array
 
@@ -74,28 +75,29 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
 
         self._pca = TruncatedSVD(**self._config['pca_config'])
 
-        self._X_train = self._pca.fit_transform(self._vectorized_data)
+        X = self._pca.fit_transform(self._vectorized_data)
+        return X
 
-    def train_model(self):
-        self._clean_text()
-        self._fit_tfidf()
-        self._fit_pca()
-        self._fit_model()
-        self._create_saved_model()
+    def _process_text(self, raw_data):
+        tokenized_data = self._tokenize_text(raw_data=raw_data)
+        vectorized_data = self._fit_tfidf(tokenized_data=tokenized_data)
+        X_train = self._fit_pca(vectorized_data=vectorized_data)
+        y_train = self._get_outcome_value(data=tokenized_data)
+        return X_train, y_train
 
     def _create_saved_model(self):
-        trained_model = NoteTaggerTrainedRandomForest(
+        self._trained_model = NoteTaggerTrainedRandomForest(
             window_size=self._window_size,
             word_tags=self._word_tags,
             stride_length=self._stride_length,
             config=self._config)
 
-        trained_model._vectorizer = self._vectorizer
-        trained_model._pca = self._pca
-        trained_model._model = self._model
+        self._trained_model._vectorizer = self._vectorizer
+        self._trained_model._pca = self._pca
+        self._trained_model._model = self._model
 
         with open(self._model_save_path, 'wb') as outfile:
-            pickle.dump(trained_model, outfile)
+            pickle.dump(self._trained_model, outfile)
 
 
 class NoteTaggerTrainedRandomForest(NoteTaggerTrainedModel):
@@ -123,6 +125,8 @@ class NoteTaggerTrainedRandomForest(NoteTaggerTrainedModel):
         vectorized_data = self._tfidf.transform(tokenized_data['tokenized_text'])
         X = self._pca.transform(vectorized_data)
         tokenized_data[prediction_column_name] = self._model.predict_proba(X)[:, 1]
+
+        metadata_columns = ["_id"] + metadata_columns
 
         note_tag_predictions = (tokenized_data[metadata_columns + [prediction_column_name]]
                                 .groupby(metadata_columns)[prediction_column_name].max()
