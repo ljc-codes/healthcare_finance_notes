@@ -4,7 +4,7 @@ import numpy as np
 from prompt_toolkit import prompt
 
 from notetagger import constants
-from notetagger import metrics_calcuation
+from notetagger import metrics_calculation
 
 
 class NoteTagger:
@@ -123,7 +123,7 @@ class NoteTagger:
         comparison_set = self.data[self.data[self._validation_column_name].notnull()]
         y_true = comparison_set[self._validation_column_name].astype('float64')
         y_pred = comparison_set[self._prediction_column_name]
-        print(metrics_calcuation.calculate_performance_metrics(y_true, y_pred))
+        print(metrics_calculation.calculate_performance_metrics(y_true, y_pred))
 
     def _validation_set_generator(self):
         """
