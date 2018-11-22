@@ -140,16 +140,6 @@ class NoteTagger:
         self._predict_tags()
         self._aggregate_predictions()
 
-    def set_model_window_size(self, window_size):
-        """
-        Change the `model_window_size` and load corresponding models
-
-        Arguments:
-            window_size (int): size of window model was trained on
-        """
-        self._model_window_size = window_size
-        self._load_model_and_components()
-
     def save_predictions(self, save_filepath):
         """
         Save the predictions to a jsonl file
