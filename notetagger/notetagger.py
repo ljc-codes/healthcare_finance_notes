@@ -1,3 +1,5 @@
+import json
+
 import dill as pickle
 import pandas as pd
 import numpy as np
@@ -33,7 +35,8 @@ class NoteTagger:
                  validation_column_name=constants.VALIDATION_COLUMN_NAME,
                  text_window_before=300,
                  text_window_after=10,
-                 text_window_increment=200):
+                 text_window_increment=200,
+                 run_predictions=False):
         """
         Initialize NoteViewer Object
 
@@ -41,7 +44,8 @@ class NoteTagger:
             original_data (Pandas DataFrame): DataFrame that was fed into a `NoteTaggerTrainedModel`
                 to produce predictions_data
             predictions_data (Pandas DataFrame): DataFrame containing model predictions on notes,
-                output by the `NoteTaggerTrainedModel`. If `None`, this will be calculated at initialization
+                output by the `NoteTaggerTrainedModel`. If `None` and run_predictions is `True`,
+                this will be calculated at initialization
             text_column_name (str): name column with raw note text
             metadata_columns (list of str): list of column names to include with `predictions_data`. Used
                 to join `predictions_data` and `original_data`
@@ -55,6 +59,7 @@ class NoteTagger:
             text_window_before (int): number of characters to print before word tag
             text_window_after (int): number of characters to print after tag
             text_window_increment (int): number of characters to increase window by if user selects option
+            run_predictions (bool): Calculate predictions upon initialization
         """
         self._text_column_name = text_column_name
         self._metadata_columns = metadata_columns
@@ -66,9 +71,9 @@ class NoteTagger:
         self._text_window_after = text_window_after
         self._text_window_increment = text_window_increment
 
-        self._create_dataset(original_data, predictions_data)
+        self._create_dataset(original_data, predictions_data, run_predictions)
 
-    def _create_dataset(self, original_data, predictions_data):
+    def _create_dataset(self, original_data, predictions_data, run_predictions):
         """
         Merge back in original dataset before tagging occured. Merge is done on `join_columns` and then
         data is shuffled to eliminate bias from validation.
@@ -97,12 +102,12 @@ class NoteTagger:
         self._prediction_data_columns = list(predictions_data.columns)
 
         # merge predictions data with original data
-        self._dataset = predictions_data.merge(original_data,
-                                               how='right',
-                                               on=self._metadata_columns)
+        self.data = predictions_data.merge(original_data,
+                                           how='right',
+                                           on=self._metadata_columns)
 
         # shuffle data
-        self._dataset = self._dataset.reindex(np.random.permutation(self._dataset.index))
+        self.data = self.data.reindex(np.random.permutation(self.data.index))
 
     def quick_stats(self):
         """
@@ -123,7 +128,7 @@ class NoteTagger:
         comparison_set = self.data[self.data[self._validation_column_name].notnull()]
         y_true = comparison_set[self._validation_column_name].astype('float64')
         y_pred = comparison_set[self._prediction_column_name]
-        print(metrics_calculation.calculate_performance_metrics(y_true, y_pred))
+        print(json.dumps(metrics_calculation.calculate_performance_metrics(y_true, y_pred), indent=4))
 
     def _validation_set_generator(self):
         """
@@ -140,7 +145,7 @@ class NoteTagger:
         # if data has not been validated before, create a validation column
         if self._validation_column_name not in self.data.columns:
             self.data[self._validation_column_name] = None
-            self._validation_column_name = self._validation_data_columns + [self._validation_column_name]
+            self._validation_data_columns = self._validation_data_columns + [self._validation_column_name]
 
         # validate those records which have a prediction but no validation
         validation_set_indices = (
@@ -270,7 +275,7 @@ def main():
 
     parser.add_argument('--predictions_data_path',
                         '-p',
-                        default=None,
+                        required=True,
                         type=str,
                         help='Path to predictions data must be jsonl')
 
@@ -336,9 +341,23 @@ def main():
                         type=str,
                         help='Path to model to use to make predictions data')
 
+    parser.add_argument('--run_predictions',
+                        '-r',
+                        default=False,
+                        action='store_true',
+                        help='Run model predictions upon initialization')
+
     args = parser.parse_args()
 
-    predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
+    # if run_predictions True, ensure a model path has been given otherwise load data
+    if args.run_predictions:
+        if args.model_path is None:
+            raise ValueError("If not providing prediction data, provide a model path using the -m argument")
+        else:
+            predictions_data = None
+    else:
+        predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
+
     original_data = pd.read_json(args.original_data_path, orient='records', lines=True)
 
     note_viewer = NoteTagger(predictions_data=predictions_data,
