@@ -26,6 +26,9 @@ setuptools.setup(
             # extract data
             'extract-data=training.data_extraction:main',
 
+            # train random forest
+            'train-random-forest=training.random_forest.notetaggerrandomforest:train_random_forest',
+
             # run predictions and save to file
             'predict-tags=scripts.tag_notes:main',
 
