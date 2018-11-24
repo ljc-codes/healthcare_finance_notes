@@ -73,7 +73,7 @@ class TableGenerator:
         notes_stats = self._get_total_stats(self.notes_data)
         patients_stats = self._get_total_stats(
             self.notes_data[self.notes_data[self._patient_id_column].isin(self.patient_ids)]
-            .order_by(self._prediction_column_label)
+            .sort_values(self._prediction_column_label, ascending=False)
             .drop_duplicates(self._patient_id_column))
 
         # print table
