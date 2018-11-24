@@ -18,7 +18,10 @@ setuptools.setup(
         'dev': [
             'psycopg2-binary',
             'ipython',
-        ]
+        ],
+        'partners': [
+            'tabulate'
+        ],
     },
     entry_points={
         'console_scripts': {
