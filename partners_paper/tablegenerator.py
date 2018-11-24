@@ -40,7 +40,7 @@ class TableGenerator:
 
         # format predictions column
         self.notes_data[prediction_column_label].fillna(0, inplace=True)
-        self.notes_data[prediction_column_label] = (self.data[prediction_column_label] > predictions_threshold) * 1
+        self.notes_data[prediction_column_label] = (self.notes_data[prediction_column_label] > predictions_threshold)
 
         # get ids of those patients with a financial note
         financial_notes_indices = self.notes_data[self._prediction_column_label] == 1
@@ -73,6 +73,7 @@ class TableGenerator:
         notes_stats = self._get_total_stats(self.notes_data)
         patients_stats = self._get_total_stats(
             self.notes_data[self.notes_data[self._patient_id_column].isin(self.patient_ids)]
+            .order_by(self._prediction_column_label)
             .drop_duplicates(self._patient_id_column))
 
         # print table
