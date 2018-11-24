@@ -21,7 +21,3 @@ def display_training_results():
             print('model id: ', doc['model_id'])
             print(json.dumps(doc['performance_metrics'], indent=4))
             print('\n')
-
-
-if __name__ == "__main__":
-    display_training_results()
