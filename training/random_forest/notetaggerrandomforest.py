@@ -151,13 +151,13 @@ def train_random_forest():
 
         parser.add_argument('--text_column_name',
                             '-t',
-                            required=True,
+                            default=constants.TEXT_COLUMN_NAME,
                             type=str,
                             help='label for column with raw text')
 
         parser.add_argument('--outcome_column_name',
                             '-o',
-                            required=True,
+                            default=constants.OUTCOME_COLUMN_NAME,
                             type=str,
                             help='label for outcome column')
 
@@ -170,7 +170,7 @@ def train_random_forest():
         parser.add_argument('--model_save_path',
                             '-mp',
                             required=True,
-                            type=int,
+                            type=str,
                             help='folder to save model in')
 
         parser.add_argument('--word_tags',
@@ -190,7 +190,6 @@ def train_random_forest():
                             '-gs',
                             default=False,
                             action='store_true',
-                            type=bool,
                             help='grid search over parameters before training the final model')
 
         parser.add_argument('--random_forest_config',
