@@ -1,4 +1,5 @@
 import os
+import json
 
 from pymongo import MongoClient
 
@@ -16,9 +17,10 @@ def display_training_results():
 
     # print out results
     for doc in collection.find():
-        for key in doc:
-            print(key, doc[key])
-        print('\n')
+        if 'performance_metrics' in doc:
+            print('model id: ', doc['model_id'])
+            print(json.dumps(doc['performance_metrics'], indent=4))
+            print('\n')
 
 
 if __name__ == "__main__":
