@@ -78,4 +78,4 @@ class TableGenerator:
         # print table
         print(tabulate([['Total', patients_stats['total'], notes_stats['total']],
                         ['Financial', patients_stats['financial'], notes_stats['financial']]],
-                       headers=['', 'Patients', 'Notes'])
+                       headers=['', 'Patients', 'Notes']))
