@@ -18,7 +18,7 @@ class TableGenerator:
 
         Arguments:
             predictions_filepath (str): path to jsonl file with model predictions
-            patient_data_filepath (str): path to jsonl file with patient data that can be joined to
+            patient_data_filepath (str): path to txt file with patient data that can be joined to
                 `predictions_filepath` data
 
         Keyword Arguments:
@@ -33,7 +33,7 @@ class TableGenerator:
 
         # load data and merge together
         predictions = pd.read_json(predictions_filepath, orient='records', lines=True)
-        patient_data = pd.read_json(patient_data_filepath, orient='records', lines=True)
+        patient_data = pd.read_csv(patient_data_filepath)
         self.notes_data = patient_data.merge(predictions[[note_id_column, prediction_column_label]],
                                              how='left',
                                              on=note_id_column)
