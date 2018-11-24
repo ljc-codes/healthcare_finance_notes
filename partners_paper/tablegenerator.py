@@ -12,7 +12,7 @@ class TableGenerator:
                  prediction_column_label=constants.PREDICTION_COLUMN_NAME,
                  predictions_threshold=0.8,
                  note_id_column='note_id',
-                 patient_id_column='subject_id'):
+                 patient_id_column='subject_num'):
         """
         Initializes the Table Generator Table used to produce tables for publication
 
@@ -61,7 +61,7 @@ class TableGenerator:
         total = df.shape[0]
         financial = df[self._prediction_column_label].sum()
         stats = {'total': '{0:,}'.format(total),
-                 'financial': '{0:,} ({1:.2f})'.format(financial, financial / total * 100)}
+                 'financial': '{0:,} ({1:.2f}%)'.format(financial, financial / total * 100)}
         return stats
 
     def create_summary_table(self):
@@ -72,7 +72,7 @@ class TableGenerator:
         # get stats for both patients and notes
         notes_stats = self._get_total_stats(self.notes_data)
         patients_stats = self._get_total_stats(
-            self.notes_data[self.notes_data[self._patient_id_column].isin(self.patient_ids)]
+            self.notes_data
             .sort_values(self._prediction_column_label, ascending=False)
             .drop_duplicates(self._patient_id_column))
 
