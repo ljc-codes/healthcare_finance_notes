@@ -141,94 +141,97 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
 
 
 def train_random_forest():
-        parser = argparse.ArgumentParser()
+    """
+    Command line handler for NoteTaggerRandomForestTrain
+    """
+    parser = argparse.ArgumentParser()
 
-        parser.add_argument('--model_name',
-                            '-mn',
-                            default='random_forest',
-                            type=str,
-                            help='name of model to use in model id calculation')
+    parser.add_argument('--model_name',
+                        '-mn',
+                        default='random_forest',
+                        type=str,
+                        help='name of model to use in model id calculation')
 
-        parser.add_argument('--text_column_name',
-                            '-t',
-                            default=constants.TEXT_COLUMN_NAME,
-                            type=str,
-                            help='label for column with raw text')
+    parser.add_argument('--text_column_name',
+                        '-t',
+                        default=constants.TEXT_COLUMN_NAME,
+                        type=str,
+                        help='label for column with raw text')
 
-        parser.add_argument('--outcome_column_name',
-                            '-o',
-                            default=constants.OUTCOME_COLUMN_NAME,
-                            type=str,
-                            help='label for outcome column')
+    parser.add_argument('--outcome_column_name',
+                        '-o',
+                        default=constants.OUTCOME_COLUMN_NAME,
+                        type=str,
+                        help='label for outcome column')
 
-        parser.add_argument('--window_size',
-                            '-ws',
-                            required=True,
-                            type=int,
-                            help='size of window taken before and after text (total size of window * 2)')
+    parser.add_argument('--window_size',
+                        '-ws',
+                        required=True,
+                        type=int,
+                        help='size of window taken before and after text (total size of window * 2)')
 
-        parser.add_argument('--model_save_path',
-                            '-mp',
-                            required=True,
-                            type=str,
-                            help='folder to save model in')
+    parser.add_argument('--model_save_path',
+                        '-mp',
+                        required=True,
+                        type=str,
+                        help='folder to save model in')
 
-        parser.add_argument('--word_tags',
-                            '-wt',
-                            default=constants.TAGS,
-                            action='append',
-                            type=str,
-                            help='Tags on which the model predicted on')
+    parser.add_argument('--word_tags',
+                        '-wt',
+                        default=constants.TAGS,
+                        action='append',
+                        type=str,
+                        help='Tags on which the model predicted on')
 
-        parser.add_argument('--stride_length',
-                            '-s',
-                            default=None,
-                            type=int,
-                            help='stride for sliding window, used only if `word_tags` is `None`')
+    parser.add_argument('--stride_length',
+                        '-s',
+                        default=None,
+                        type=int,
+                        help='stride for sliding window, used only if `word_tags` is `None`')
 
-        parser.add_argument('--grid_search',
-                            '-gs',
-                            default=False,
-                            action='store_true',
-                            help='grid search over parameters before training the final model')
+    parser.add_argument('--grid_search',
+                        '-gs',
+                        default=False,
+                        action='store_true',
+                        help='grid search over parameters before training the final model')
 
-        parser.add_argument('--random_forest_config',
-                            '-rf',
-                            required=True,
-                            type=str,
-                            help='path to json file with random forest configuration parameters')
+    parser.add_argument('--random_forest_config',
+                        '-rf',
+                        required=True,
+                        type=str,
+                        help='path to json file with random forest configuration parameters')
 
-        parser.add_argument('--training_data_path',
-                            '-train',
-                            required=True,
-                            type=str,
-                            help='path to training data, must be jsonl')
+    parser.add_argument('--training_data_path',
+                        '-train',
+                        required=True,
+                        type=str,
+                        help='path to training data, must be jsonl')
 
-        parser.add_argument('--validation_data_path',
-                            '-val',
-                            required=True,
-                            type=str,
-                            help='path to validation data, must be jsonl')
+    parser.add_argument('--validation_data_path',
+                        '-val',
+                        required=True,
+                        type=str,
+                        help='path to validation data, must be jsonl')
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        # load data and initialize model trainer
-        train_data = pd.read_json(args.training_data_path, orient='records', lines=True)
-        rf_trainer = NoteTaggerRandomForestTrain(
-            rf_config_path=args.random_forest_config,
-            data=train_data,
-            text_column_name=args.text_column_name,
-            outcome_column_name=args.outcome_column_name,
-            window_size=args.window_size,
-            model_save_path=args.model_save_path,
-            model_name=args.model_name,
-            word_tags=args.word_tags,
-            stride_length=args.stride_length,
-            grid_search=args.grid_search)
+    # load data and initialize model trainer
+    train_data = pd.read_json(args.training_data_path, orient='records', lines=True)
+    rf_trainer = NoteTaggerRandomForestTrain(
+        rf_config_path=args.random_forest_config,
+        data=train_data,
+        text_column_name=args.text_column_name,
+        outcome_column_name=args.outcome_column_name,
+        window_size=args.window_size,
+        model_save_path=args.model_save_path,
+        model_name=args.model_name,
+        word_tags=args.word_tags,
+        stride_length=args.stride_length,
+        grid_search=args.grid_search)
 
-        # load validation data and train model
-        validation_data = pd.read_json(args.validation_data_path, orient='records', lines=True)
-        rf_trainer.train_model(validation_data=validation_data)
+    # load validation data and train model
+    validation_data = pd.read_json(args.validation_data_path, orient='records', lines=True)
+    rf_trainer.train_model(validation_data=validation_data)
 
 
 class NoteTaggerTrainedRandomForest(NoteTaggerTrainedModel):
