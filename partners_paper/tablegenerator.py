@@ -33,7 +33,7 @@ class TableGenerator:
 
         # load data and merge together
         predictions = pd.read_json(predictions_filepath, orient='records', lines=True)
-        patient_data = pd.read_csv(patient_data_filepath)
+        patient_data = pd.read_csv(patient_data_filepath, sep='\t')
         self.notes_data = patient_data.merge(predictions[[note_id_column, prediction_column_label]],
                                              how='left',
                                              on=note_id_column)
