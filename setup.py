@@ -15,7 +15,7 @@ setuptools.setup(
         'pymongo',
     ],
     extras_require={
-        'training': [
+        'dev': [
             'psycopg2-binary',
             'ipython',
         ]

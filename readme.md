@@ -4,53 +4,63 @@ A class for tagging electronic medical record (EMR) notes as either having finan
 ## Setup
 To use the notetagger ensure that you have `python 3.6` installed, clone this repo, and then run `pip install -e .`
 
-If you'd also like to train a new model, also run `pip install -e .[training]`
-
 ## Usage
 
 ### Tagging Notes
 
-When tagging a new dataset, first load a [Pandas Dataframe](https://pandas.pydata.org/pandas-docs/stable/api.html#input-output) that has at least an id column and raw note text column, then initialize the class as follows:
+#### Command Line
 
-```python
-# initialize class
-tagger = NoteTagger(data=PandasDataframe,
-                    text_column_name=str,
-                    metadata_columns=[id_column_name,...])
+When tagging a new dataset, the easiest way to do so is to run the following command:
 
-# save predictions
-tagger.save_predictions(save_filepath=str)
+```bash
+predict-tags --model_path 'path to model' --input_data 'path to existing jsonl file' --output_data 'path to new jsonl file' --text_column_name 'name of column with raw text' --metadata_columns 'name of metadata column to include'
 ```
 
-If you'd like to tag notes that don't contain any of the [keywords](https://github.com/pateli18/healthcare_finance_notes/blob/master/notetagger/constants.py) (`cost`, `insurance`, `pay`, etc.) the model was trained on, initialize the class as follows:
+Note that `input_data` and `output_data` should be in a the `jsonl` format and that multiple `metadata_columns` can be used by replicating the tag
+
+#### Python
+
+You can also load any pickled model object and call the `predict_tags` function on a dataframe
 
 ```python
-# initialize class
-tagger = NoteTagger(data=PandasDataframe,
-                    text_column_name=str,
-                    metadata_columns=[id_column_name,...],
-                    word_tags=None)
+import dill as pickle
+
+# load model
+with open(path_to_model, 'rb') as f:
+    model = pickle.load(f)
+
+# create predictions dataset
+predictions_data = model.predict_tag(
+    data=data_with_raw_note_text,
+    text_column_name=label_of_column,
+    metadata_columns=list_of_column_labels)
 ```
 
-### Validating Tags
+### Validating Model Predictions
 
-To ensure the model is making predictions as anticipated on an untagged dataset, use the command line interface provided by the `noteviewer.py` file. This will print out snippets of text surrounding the `word_tags` used to trian the model (if no word tags were used, the entire note is printed) and give the user an option to tag the note positively or negatively, saving the predictions to disk.
+To ensure the model is making predictions as anticipated on an untagged dataset, use the command line interface provided by the `notetagger.py` file. This will print out snippets of text surrounding the `word_tags` used to trian the model (if no word tags were used, the entire note is printed) and give the user an option to tag the note positively or negatively, saving the predictions to disk.
+
+#### Command Line
 
 To launch the validator from the command line, type in the following command:
 
 ```bash
-note-viewer -p 'path to predictions file' -o 'path to original dataset' -j note_id -t text
+note-tagger --predictions_file_path 'path to predictions file' --original_file_path 'path to original dataset' --metadata_columns note_id --text_column_name text
 ```
+
+Note that `input_data` and `output_data` should be in a the `jsonl` format and that multiple `metadata_columns` can be used by replicating the tag. The `--run_predictions` flag can be used to run predictions before launching the viewer (be sure to include the `--model_path` flag as well)
+
+#### Python
 
 To launch the validator via python, you can do the following:
 
 ```python
 # initialize class
-tagger = NoteViewer(predictions_data=PandasDataframe,
+tagger = NoteTagger(predictions_data=PandasDataframe,
                     original_data=PandasDataframe,
-                    join_column_names=[str,...],
-                    text_column_name=str)
+                    text_column_name=label_of_column,
+                    metadata_columns=list_of_column_labels)
 
 # start validator
-tagger.validate_predictions(validation_save_path=str)
+tagger.validate_predictions(validation_save_path=path_to_jsonl_file)
 ```
