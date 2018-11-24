@@ -45,7 +45,7 @@ To ensure the model is making predictions as anticipated on an untagged dataset,
 To launch the validator from the command line, type in the following command:
 
 ```bash
-note-tagger --predictions_file_path 'path to predictions file' --original_file_path 'path to original dataset' --metadata_columns note_id --text_column_name text
+note-tagger --predictions_file_path 'path to predictions file' --original_file_path 'path to original dataset' --text_column_name 'name of column with raw text' --metadata_columns 'name of metadata column to include'
 ```
 
 Note that `input_data` and `output_data` should be in a the `jsonl` format and that multiple `metadata_columns` can be used by replicating the tag. The `--run_predictions` flag can be used to run predictions before launching the viewer (be sure to include the `--model_path` flag as well)
