@@ -356,10 +356,13 @@ def main():
         else:
             predictions_data = None
     else:
+        print("Loading Predictions Data...")
         predictions_data = pd.read_json(args.predictions_data_path, orient='records', lines=True)
 
+    print("Loading Original Data...")
     original_data = pd.read_json(args.original_data_path, orient='records', lines=True)
 
+    print("Initializing NoteTagger...")
     note_viewer = NoteTagger(predictions_data=predictions_data,
                              original_data=original_data,
                              metadata_columns=args.metadata_columns,
@@ -372,4 +375,5 @@ def main():
                              text_window_increment=args.text_window_increment,
                              model_path=args.model_path)
 
+    print("Starting NoteViewer...")
     note_viewer.validate_predictions(validation_save_path=args.predictions_data_path)

@@ -23,8 +23,14 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
                  model_name='random_forest',
                  word_tags=constants.TAGS,
                  stride_length=None,
-                 tokens_column_name=constants.FEATURE_COLUMN_NAME,
                  grid_search=False):
+        """
+        Implements the NoteTaggerModelTrain class for a Random Forest Model. Most Arguments and
+        Keyword Arguments inherited from the parent class
+
+        Arguments:
+            rf_config_path (str): path to json file with random forest configuration parameters
+        """
 
         super().__init__(model_name=model_name,
                          data=data,
@@ -34,28 +40,33 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
                          model_save_path=model_save_path,
                          word_tags=word_tags,
                          stride_length=stride_length,
-                         tokens_column_name=tokens_column_name,
                          grid_search=grid_search)
 
         # load configuration file
         with open(rf_config_path, 'r') as f:
             self._config["model_params"] = json.load(f)
 
+        # set base model to random forest
         self._base_model = RandomForestClassifier
 
     def _fit_tfidf(self, tokenized_data):
         """
-        Fits a tf-idf vectorizer on a provided dataframe
+        Fits a tf-idf vectorizer on tokenized text data
 
         Arguments:
-            data_input (Pandas Dataframe): dataframe with tokenized words in the `tokens_column_name` column
+            tokenized_data (Pandas Dataframe): dataframe with tokenized words in the 'tokenized_text' column
+
+        Returns:
+            vectorized_data (array): tfidf matrix of tokenized words
         """
         print("Training Vectorizer")
 
+        # convert ngram range to tuple
         if "ngram_range" in self._config["model_params"]['tfidf_config']:
             self._config["model_params"]['tfidf_config']['ngram_range'] = tuple(
                 self._config["model_params"]['tfidf_config']["ngram_range"])
 
+        # initialize vectorizer
         self._vectorizer = TfidfVectorizer(analyzer='word',
                                            tokenizer=lambda doc: doc,
                                            preprocessor=lambda doc: doc,
@@ -67,24 +78,36 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
 
     def _fit_pca(self, vectorized_data):
         """
-        Fits an PCA component to a provided array
+        Fits an PCA component to a tfidf vectorized data array
 
         Arguments:
-            data_input (numpy array): matrix transformed by tfidf
-            config (dict): config params for a given pca
+            vectorized_data (array): tfidf matrix of tokenized words
 
         Returns:
-            pca (TruncatedSVD): pca object for transforming any tfidf matrix
+            X (array): feature array to be used in training / validating model
         """
 
         print("Using PCA")
 
+        # initalize truncated svd
         self._pca = TruncatedSVD(**self._config["model_params"]['pca_config'])
 
         X = self._pca.fit_transform(vectorized_data)
         return X
 
     def _process_text(self, raw_data):
+        """
+        Takes in a dataframe with raw note text and training features and outcomes by first
+        tokenizing the text, then transforming it with tfidf before reducing dimensionality with
+        pca
+
+        Arguments:
+            raw_data (Pandas DataFrame): data with a raw text column and outcome column
+
+        Returns:
+            X_train (array): Array with training features
+            y_train (array): Array with training outcomes
+        """
         tokenized_data = self._tokenize_text(raw_data=raw_data)
         vectorized_data = self._fit_tfidf(tokenized_data=tokenized_data)
         X_train = self._fit_pca(vectorized_data=vectorized_data)
@@ -92,17 +115,25 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
         return X_train, y_train
 
     def _create_saved_model(self):
+        """
+        Creates and saves a `NoteTaggerTrainedRandomForest` class object with the necessary
+        components
+        """
         print("Saving Model")
+
+        # initialize trained random forest class
         self._trained_model = NoteTaggerTrainedRandomForest(
             window_size=self._config["notetagger_params"]['window_size'],
             word_tags=self._config["notetagger_params"]['word_tags'],
             stride_length=self._config["notetagger_params"]['stride_length'],
             model_config=self._config['model_params'])
 
+        # set vectorizer, pca, and model variables to class
         self._trained_model._vectorizer = self._vectorizer
         self._trained_model._pca = self._pca
         self._trained_model._model = self._model
 
+        # save model to pickle file
         with open(self._model_save_file, 'wb') as outfile:
             pickle.dump(self._trained_model, outfile)
 
@@ -114,6 +145,10 @@ class NoteTaggerTrainedRandomForest(NoteTaggerTrainedModel):
                  model_config,
                  word_tags=constants.TAGS,
                  stride_length=None):
+        """
+        Implements the NoteTaggerTrainedModel class for a Random Forest Model. All Arguments and
+        Keyword Arguments inherited from the parent class
+        """
 
         super().__init__(window_size=window_size,
                          model_config=model_config,
@@ -121,6 +156,22 @@ class NoteTaggerTrainedRandomForest(NoteTaggerTrainedModel):
                          stride_length=stride_length)
 
     def predict_tag(self, data, text_column_name, metadata_columns, prediction_column_name):
+        """
+        Takes raw data and predicts tags for each record using the random forest model. Aggregates
+        the multiple predictions per record (e.g. multiple windows per record) into one prediction
+        and then returns the predictions with associated metadata in a dataframe
+
+        Arguments:
+            data (Pandas Dataframe): data with a raw text column
+            text_column_name (str): label for column with raw text
+            metadata_columns (list of str): list of column names to include in output dataframe
+            prediction_column_name (str): name of column with predictions
+
+        Returns:
+            note_tag_predictions (Pandas Dataframe): dataframe with metadata_columns and prediction_column_name
+        """
+
+        # tokenize text, tfidf it, and pca it
         tokenized_data = text_processing.process_text(df=data,
                                                       window_size=self._window_size,
                                                       tags=self._word_tags,
@@ -131,10 +182,14 @@ class NoteTaggerTrainedRandomForest(NoteTaggerTrainedModel):
 
         vectorized_data = self._vectorizer.transform(tokenized_data['tokenized_text'])
         X = self._pca.transform(vectorized_data)
+
+        # predict text probability
         tokenized_data[prediction_column_name] = self._model.predict_proba(X)[:, 1]
 
+        # add '_id' column created during tokenization with metadata columns
         metadata_columns = ["_id"] + metadata_columns
 
+        # aggregate predictions to each record
         note_tag_predictions = (tokenized_data[metadata_columns + [prediction_column_name]]
                                 .groupby(metadata_columns)[prediction_column_name].max()
                                 .reset_index())
