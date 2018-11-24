@@ -12,11 +12,11 @@ setuptools.setup(
         'tqdm',
         'sklearn',
         'prompt_toolkit',
+        'pymongo',
     ],
     extras_require={
         'training': [
             'psycopg2-binary',
-            'pymongo',
             'ipython',
         ]
     },
