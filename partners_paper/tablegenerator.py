@@ -114,16 +114,6 @@ class TableGenerator:
             formatted_p_value (str): stars associated with p-value
         """
         formatted_p_value = '<0.001' if p_value < 0.001 else '{0:.3f}'.format(p_value)
-
-        # add stars to p_value
-        adjusted_p_value = p_value / num_comparisons
-        if adjusted_p_value < 0.001:
-            formatted_p_value += '***'
-        elif adjusted_p_value < 0.01:
-            formatted_p_value += '**'
-        elif adjusted_p_value < 0.05:
-            formatted_p_value += '*'
-
         return formatted_p_value
 
     def _calc_chi2_counts(self, df, column_label, column_value):
@@ -164,7 +154,7 @@ class TableGenerator:
         chi2_test = chi2_contingency(np.array([f_obs, f_exp]))
 
         # create response json
-        chi2_data = [column_value,
+        chi2_data = ['\t' + column_value,
                      '{0:,} ({1:.2f}%)'.format(f_obs[0], f_obs[0] / sum(f_obs) * 100),
                      '{0:,} ({1:.2f}%)'.format(f_exp[0], f_exp[0] / sum(f_exp) * 100),
                      '{0:.2f}'.format(chi2_test[0]),
