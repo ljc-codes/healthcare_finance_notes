@@ -20,7 +20,9 @@ setuptools.setup(
             'ipython',
         ],
         'partners': [
-            'tabulate'
+            'tabulate',
+            'numpy',
+            'scipy',
         ],
     },
     entry_points={
