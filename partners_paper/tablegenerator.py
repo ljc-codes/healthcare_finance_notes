@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
+from scipy.stats import ttest_1samp
 from tabulate import tabulate
 
 from notetagger import constants
@@ -16,7 +17,8 @@ class TableGenerator:
                  note_id_column='note_id',
                  note_date_column='note_date',
                  patient_id_column='subject_num',
-                 categorical_columns=['gender', 'race']):
+                 categorical_columns=['gender', 'race'],
+                 numerical_columns=['age_at_visit']):
         """
         Initializes the Table Generator Table used to produce tables for publication
 
@@ -36,6 +38,7 @@ class TableGenerator:
         self._prediction_column = prediction_column
         self._patient_id_column = patient_id_column
         self._categorical_columns = categorical_columns
+        self._numerical_columns = numerical_columns
 
         # load data and merge together
         predictions = pd.read_json(predictions_filepath, orient='records', lines=True)
@@ -176,7 +179,7 @@ class TableGenerator:
         for column_label in self._categorical_columns:
 
             # add header for column label in table
-            categorical_table_data.append([column_label, '', '', '', ''])
+            categorical_table_data.append([column_label.capitalize(), '', '', '', ''])
 
             # get all column values in column
             column_values = list(self.notes_data[column_label].unique())
@@ -187,3 +190,56 @@ class TableGenerator:
                     self._calc_chi2_test(column_label=column_label, column_value=column_value))
 
         print(tabulate(categorical_table_data, headers=['Feature', 'n (%)', 'n (%)', 'Chi Square', 'P-Value']))
+
+    def _calc_t_test_stats(self, df, column_label):
+        """
+        Gets mean and std for a speficic column
+
+        Arguments:
+            df (Pandas DataFrame): dataframe with the column label
+            column_label (str): label of column which contains the value being tested
+
+        Returns:
+            stats (dict): dict of mean and standard deviation of column
+        """
+        mean = df[column_label].mean()
+        std = df[column_label].std()
+        stats = {"mean": mean, "std": std}
+        return stats
+
+    def _calc_t_test(self, column_label):
+        """
+        Performs a ttest comparison for a specific numerical column
+
+        Arguments:
+            column_label (str): label of column which contains the value being tested
+
+        Returns:
+            t_test_data (list): list with the value of the column, mean and std for both finance and non-finance,
+                the t-test statistic, and its p-value
+        """
+        sample_stats = self._calc_t_test_stats(self.patients_w_tags)
+        population_stats = self._calc_t_test_stats(self.patients_wout_tags)
+
+        t_test = ttest_1samp(self.patients_w_tags[column_label].values, population_stats["mean"], nan_policy='omit')
+        t_test_data = [column_label,
+                       '{0:.2f} ({1:.1f})'.format(sample_stats["mean"], sample_stats["std"]),
+                       '{0:.2f} ({1:.1f})'.format(population_stats["mean"], population_stats["std"]),
+                       '{0:.3f}'.format(t_test.statistic),
+                       self._format_p_value(t_test.pvalue)]
+        return t_test_data
+
+    def create_numerical_table(self):
+        """
+        Prints a summary table for t-test comparisons of numerical values at the patient level
+        """
+        numerical_table_data = [self._calc_t_test(column_label) for column_label in self._numerical_columns]
+        print(tabulate(numerical_table_data, headers=['Feature', 'Mean (SD)', 'Mean (SD)', "Student's T", 'P-Value']))
+
+    def create_all_tables(self):
+        """
+        Runs all table creation functions in class
+        """
+        self.create_summary_table()
+        self.create_numerical_table()
+        self.create_categorical_table()
