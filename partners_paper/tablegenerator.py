@@ -241,14 +241,17 @@ class TableGenerator:
         self.create_numerical_table()
         print('\n')
         self.create_categorical_table()
+        print('\n')
+        self.create_logistic_regression_table()
 
-    def run_logistic_regression(self):
+    def create_logistic_regression_table(self):
         """
         Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
         """
 
         # creat matrix of training features
-        training_features = pd.concat([pd.get_dummies(self.notes_data[col]) for col in self._categorical_columns] +
+        training_features = pd.concat([pd.get_dummies(self.notes_data[col], prefix=col)
+                                       for col in self._categorical_columns] +
                                       [self.notes_data[col] for col in self._numerical_columns],
                                       axis=1)
 
