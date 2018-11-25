@@ -23,6 +23,7 @@ setuptools.setup(
             'tabulate',
             'numpy',
             'scipy',
+            'statsmodels',
         ],
     },
     entry_points={

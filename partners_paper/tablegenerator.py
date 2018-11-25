@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from scipy.stats import chi2_contingency
 from scipy.stats import ttest_1samp
 from tabulate import tabulate
@@ -18,7 +19,8 @@ class TableGenerator:
                  note_date_column='note_date',
                  patient_id_column='subject_num',
                  categorical_columns=['gender', 'race'],
-                 numerical_columns=['age_at_visit']):
+                 numerical_columns=['age_at_visit'],
+                 features_to_exclude=['gender_M', 'gender_U', 'race_White']):
         """
         Initializes the Table Generator Table used to produce tables for publication
 
@@ -35,12 +37,14 @@ class TableGenerator:
             patient_id_column (str): label of column with patient ids
             categorical_columns (list of str): list of columns to calculate categorical comparisons for
             numerical_columns (list of str): list of columns to calculate numerical comparisons for
+            features_to_exclude (list of str): list of features to exclude from logistic regression
         """
 
         self._prediction_column = prediction_column
         self._patient_id_column = patient_id_column
         self._categorical_columns = categorical_columns
         self._numerical_columns = numerical_columns
+        self._features_to_exclude = features_to_exclude
 
         # load data and merge together
         predictions = pd.read_json(predictions_filepath, orient='records', lines=True)
@@ -154,7 +158,7 @@ class TableGenerator:
         chi2_test = chi2_contingency(np.array([f_obs, f_exp]))
 
         # create response json
-        chi2_data = ['\t' + column_value,
+        chi2_data = [column_value,
                      '{0:,} ({1:.2f}%)'.format(f_obs[0], f_obs[0] / sum(f_obs) * 100),
                      '{0:,} ({1:.2f}%)'.format(f_exp[0], f_exp[0] / sum(f_exp) * 100),
                      '{0:.2f}'.format(chi2_test[0]),
@@ -237,3 +241,37 @@ class TableGenerator:
         self.create_numerical_table()
         print('\n')
         self.create_categorical_table()
+
+    def run_logistic_regression(self):
+        """
+        Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
+        """
+
+        # creat matrix of training features
+        training_features = pd.concat([pd.get_dummies(self.notes_data[col]) for col in self._categorical_columns] +
+                                      [self.notes_data[col] for col in self._numerical_columns],
+                                      axis=1)
+
+        # drop columns to allow for regression convergence
+        training_features.drop(self._features_to_exclude, axis=1, inplace=True)
+
+        # fit model
+        logit = sm.Logit(self.notes_data[self._prediction_column], training_features)
+        result = logit.fit()
+
+        # create dataframe of results
+        regression_results = pd.DataFrame()
+        regression_results['odds_ratio'] = np.exp(result.params)
+        regression_results['lower_bound'] = result.conf_inf()[0]
+        regression_results['upper_bound'] = result.conf_inf()[1]
+        regression_results['p_value'] = result.pvalues
+
+        # format data for regression table
+        regression_table_data = []
+        for index, row in regression_results.iterrows():
+            data_point = [index,
+                          '{0:.2f} ({1:.2f}-{2:.2f})'.format(row['odds_ratio'], row['lower_bound'], row['upper_bound']),
+                          self._format_p_value(row['p_value'])]
+            regression_table_data.append(data_point)
+
+        print(tabulate(regression_table_data, headers=['Feature', 'Odds Ratio (95% CI)', 'P Value']))
