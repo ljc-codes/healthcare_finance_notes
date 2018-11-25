@@ -95,6 +95,32 @@ class TableGenerator:
                         ['Financial', patients_stats['financial'], notes_stats['financial']]],
                        headers=['', 'Patients', 'Notes']))
 
+    def _format_p_value(self, p_value, num_comparisons=1):
+        """
+        Get formatted p-value for displaying in table
+
+        Arguments:
+            p_value (float): p_value output by some statistical test
+
+        Keyword Arguments:
+            num_comparisons (int): number of comparisons to use for bonferroni correction
+
+        Returns:
+            formatted_p_value (str): stars associated with p-value
+        """
+        formatted_p_value = '<0.001' if p_value < 0.001 else '{0:.3f}'.format(p_value)
+
+        # add stars to p_value
+        adjusted_p_value = p_value / num_comparisons
+        if adjusted_p_value < 0.001:
+            formatted_p_value += '***'
+        elif adjusted_p_value < 0.01:
+            formatted_p_value += '**'
+        elif adjusted_p_value < 0.05:
+            formatted_p_value += '*'
+
+        return formatted_p_value
+
     def _calc_chi2_counts(self, df, column_label, column_value):
         """
         Get counts of the desired value and all other records less the value for use in `_calc_chi2_test`
@@ -134,10 +160,10 @@ class TableGenerator:
 
         # create response json
         chi2_data = [column_value,
-                     '{0:,} ({1:.2f})'.format(f_obs[0], f_obs[0] / sum(f_obs) * 100),
-                     '{0:,} ({1:.2f})'.format(f_exp[0], f_exp[0] / sum(f_exp) * 100),
-                     chi2_test[0],
-                     chi2_test[1]]
+                     '{0:,} ({1:.2f}%)'.format(f_obs[0], f_obs[0] / sum(f_obs) * 100),
+                     '{0:,} ({1:.2f}%)'.format(f_exp[0], f_exp[0] / sum(f_exp) * 100),
+                     '{0:.2f}'.format(chi2_test[0]),
+                     self._format_p_value(chi2_test[1])]
         return chi2_data
 
     def create_categorical_table(self):
@@ -148,6 +174,11 @@ class TableGenerator:
         # loop through each categorical column and then each value in the column, adding the test data to the list
         categorical_table_data = []
         for column_label in self._categorical_columns:
+
+            # add header for column label in table
+            categorical_table_data.append([column_label, '', '', '', ''])
+
+            # get all column values in column
             column_values = list(self.notes_data[column_label].unique())
 
             # loop through each column value in the column
