@@ -265,8 +265,8 @@ class TableGenerator:
         # create dataframe of results
         regression_results = pd.DataFrame()
         regression_results['odds_ratio'] = np.exp(result.params)
-        regression_results['lower_bound'] = result.conf_inf()[0]
-        regression_results['upper_bound'] = result.conf_inf()[1]
+        regression_results['lower_bound'] = result.conf_int()[0]
+        regression_results['upper_bound'] = result.conf_int()[1]
         regression_results['p_value'] = result.pvalues
 
         # format data for regression table
