@@ -33,6 +33,8 @@ class TableGenerator:
             note_id_column (str): label of column with the note ids
             note_date_column (str): label of column with the note dates
             patient_id_column (str): label of column with patient ids
+            categorical_columns (list of str): list of columns to calculate categorical comparisons for
+            numerical_columns (list of str): list of columns to calculate numerical comparisons for
         """
 
         self._prediction_column = prediction_column
@@ -241,5 +243,7 @@ class TableGenerator:
         Runs all table creation functions in class
         """
         self.create_summary_table()
+        print('\n')
         self.create_numerical_table()
+        print('\n')
         self.create_categorical_table()
