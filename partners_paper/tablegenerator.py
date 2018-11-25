@@ -218,8 +218,8 @@ class TableGenerator:
             t_test_data (list): list with the value of the column, mean and std for both finance and non-finance,
                 the t-test statistic, and its p-value
         """
-        sample_stats = self._calc_t_test_stats(self.patients_w_tags)
-        population_stats = self._calc_t_test_stats(self.patients_wout_tags)
+        sample_stats = self._calc_t_test_stats(self.patients_w_tags, column_label)
+        population_stats = self._calc_t_test_stats(self.patients_wout_tags, column_label)
 
         t_test = ttest_1samp(self.patients_w_tags[column_label].values, population_stats["mean"], nan_policy='omit')
         t_test_data = [column_label,
