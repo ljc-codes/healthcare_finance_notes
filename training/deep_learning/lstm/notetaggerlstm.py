@@ -16,7 +16,6 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
 
     def __init__(self,
                  lstm_config_path,
-                 embedding_layer_path,
                  data,
                  text_column_name,
                  outcome_column_name,
@@ -58,9 +57,9 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
         self._create_model()
 
     def _create_model(self):
-        input_layer = layers.Input(shape=(self.window_size,), name='input_layer')
-        model_layer = self._embedding_layer()(input_layer)
-        for i, lstm_layer in self._config['model_params']['lstm_layers']:
+        input_layer = layers.Input(shape=(self._config["notetagger_params"]['window_size'],), name='input_layer')
+        model_layer = self._embedding_layer(input_layer)
+        for i, lstm_layer in enumerate(self._config['model_params']['lstm_layers']):
             model_layer = layers.LSTM(lstm_layer, name='lstm_layer_{}'.format(i))(model_layer)
         dense_layer = layers.Dense(1, name='dense_layer')(model_layer)
         output_layer = layers.Activation('sigmoid', name='activation_layer')(dense_layer)
