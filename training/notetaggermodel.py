@@ -116,6 +116,7 @@ class NoteTaggerModelTrain:
 
         # select best performing model
         self._config['model_params']['model_config'] = self._model_cv.best_params_
+        self._model = self._base_model(**self._config['model_params']['model_config'])
 
     def _fit_model(self,
                    X_train,
@@ -131,7 +132,6 @@ class NoteTaggerModelTrain:
         if self._config["notetagger_params"]['grid_search']:
             self._grid_seach_model()
 
-        self._model = self._base_model(**self._config['model_params']['model_config'])
         self._model.fit(X_train, y_train)
 
     def train_model(self, validation_data=None, store_result=True):

@@ -50,6 +50,7 @@ class NoteTaggerRandomForestTrain(NoteTaggerModelTrain):
 
         # set base model to random forest
         self._base_model = RandomForestClassifier
+        self._model = self._base_model(**self._config['model_params']['model_config'])
 
     def _fit_tfidf(self, tokenized_data):
         """
