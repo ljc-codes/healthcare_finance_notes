@@ -163,7 +163,7 @@ def train_lstm():
                         help='stride for sliding window, used only if `word_tags` is `None`')
 
     parser.add_argument('--lstm_config',
-                        '-rf',
+                        '-lstm',
                         required=True,
                         type=str,
                         help='path to json file with lstm configuration parameters')
