@@ -38,7 +38,7 @@ setuptools.setup(
             'train-random-forest=training.random_forest.notetaggerrandomforest:train_random_forest',
 
             # train lstm
-            'train-lstm=training.lstm.notetaggerlstm:train_lstm',
+            'train-lstm=training.deep_learning.lstm.notetaggerlstm:train_lstm',
 
             # run predictions and save to file
             'predict-tags=scripts.tag_notes:main',
