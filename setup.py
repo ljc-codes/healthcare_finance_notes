@@ -18,6 +18,8 @@ setuptools.setup(
         'dev': [
             'psycopg2-binary',
             'ipython',
+            'tensorflow',
+            'keras',
         ],
         'partners': [
             'tabulate',
