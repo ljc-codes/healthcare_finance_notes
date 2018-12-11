@@ -185,7 +185,7 @@ def train_lstm():
     # load data and initialize model trainer
     train_data = pd.read_json(args.training_data_path, orient='records', lines=True)
     lstm_trainer = NoteTaggerLSTMTrain(
-        lstm_config_path=args.random_forest_config,
+        lstm_config_path=args.lstm_config,
         data=train_data,
         text_column_name=args.text_column_name,
         outcome_column_name=args.outcome_column_name,
