@@ -1,7 +1,7 @@
 {
 	"embedding_path": "data/embedding_layer/embedding_matrix_50d.pkl",
 	"word_to_index": "data/embedding_layer/word_to_index_50d.json",
-	"lstm_layers": [64, 64],
+	"lstm_layers": [128, 128],
 	"compile_config": {
 		"optimizer": "adam",
 		"loss": "binary_crossentropy",

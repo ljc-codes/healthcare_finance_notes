@@ -61,13 +61,16 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
         model_layer = self._embedding_layer(input_layer)
         for i, lstm_layer in enumerate(self._config['model_params']['lstm_layers']):
             return_sequences = True if i < len(self._config['model_params']['lstm_layers']) - 1 else False
-            model_layer = layers.LSTM(lstm_layer,
-                                      return_sequences=return_sequences,
-                                      name='lstm_layer_{}'.format(i))(model_layer)
+            model_layer = layers.Bidirectional(
+                layers.LSTM(
+                    lstm_layer,
+                    return_sequences=return_sequences,
+                    name='lstm_layer_{}'.format(i)))(model_layer)
         dense_layer = layers.Dense(1, name='dense_layer')(model_layer)
         output_layer = layers.Activation('sigmoid', name='activation_layer')(dense_layer)
         self._model = Model(input_layer, output_layer)
         self._model.compile(**self._config['model_params']['compile_config'])
+        print(self._model.summary())
 
     def _token_to_index(self, tokenized_data):
         unk_token = self._word_to_index['unk']

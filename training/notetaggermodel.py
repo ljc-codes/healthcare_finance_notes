@@ -41,7 +41,7 @@ class NoteTaggerModelTrain:
         """
 
         # create model id by appending the datetime the model was trained
-        self._model_id = model_name + datetime.today().strftime('%Y-%m-%dv%H-%m')
+        self._model_id = model_name + datetime.now().strftime('%Y-%m-%dv%H-%m')
 
         self._raw_data = data
         self._text_column_name = text_column_name
