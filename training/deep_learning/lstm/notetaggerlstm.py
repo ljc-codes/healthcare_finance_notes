@@ -57,18 +57,25 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
         self._create_model()
 
     def _create_model(self):
-        input_layer = layers.Input(shape=(self._config["notetagger_params"]['window_size'],), name='input_layer')
+        input_layer = layers.Input(shape=(self._config["notetagger_params"]['window_size'] * 2,), name='input_layer')
         model_layer = self._embedding_layer(input_layer)
         for i, lstm_layer in enumerate(self._config['model_params']['lstm_layers']):
-            model_layer = layers.LSTM(lstm_layer, name='lstm_layer_{}'.format(i))(model_layer)
+            return_sequences = True if i < len(self._config['model_params']['lstm_layers']) - 1 else False
+            model_layer = layers.LSTM(lstm_layer,
+                                      return_sequences=return_sequences,
+                                      name='lstm_layer_{}'.format(i))(model_layer)
         dense_layer = layers.Dense(1, name='dense_layer')(model_layer)
         output_layer = layers.Activation('sigmoid', name='activation_layer')(dense_layer)
         self._model = Model(input_layer, output_layer)
+        self._model.compile(**self._config['model_params']['compile_config'])
 
     def _token_to_index(self, tokenized_data):
-        indexed_data = tokenized_data['tokenized_text'].map(lambda tokens: [self._word_to_index.get(token, 'unk')
+        unk_token = self._word_to_index['unk']
+        indexed_data = tokenized_data['tokenized_text'].map(lambda tokens: [self._word_to_index.get(token, unk_token)
                                                                             for token in tokens])
-        X = np.asarray(indexed_data.tolist())
+        max_size = self._config["notetagger_params"]['window_size'] * 2
+        padded_data = indexed_data.map(lambda tokens: tokens + [0] * (max_size - len(tokens)))
+        X = np.array(padded_data.tolist())
         return X
 
     def _process_text(self, raw_data):
@@ -242,10 +249,19 @@ class NoteTaggerTrainedLSTM(NoteTaggerTrainedModel):
                                                       columns_to_keep=metadata_columns,
                                                       feature_column_name='tokenized_text')
 
-        X = self._word_to_index.transform(tokenized_data)
+        # index data
+        unk_token = self._word_to_index['unk']
+        indexed_data = tokenized_data['tokenized_text'].map(lambda tokens: [self._word_to_index.get(token, unk_token)
+                                                                            for token in tokens])
+        # pad data
+        max_size = self._window_size * 2
+        padded_data = indexed_data.map(lambda tokens: tokens + [0] * (max_size - len(tokens)))
+
+        # create X
+        X = np.array(padded_data.tolist())
 
         # predict text probability
-        tokenized_data[prediction_column_name] = self._model.predict(X)[:, 1]
+        tokenized_data[prediction_column_name] = self._model.predict(X)
 
         # add '_id' column created during tokenization with metadata columns
         metadata_columns = ["_id"] + metadata_columns
