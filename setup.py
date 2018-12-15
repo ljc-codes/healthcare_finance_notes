@@ -37,6 +37,9 @@ setuptools.setup(
             # train random forest
             'train-random-forest=training.random_forest.notetaggerrandomforest:train_random_forest',
 
+            # create embedding layer
+            'create-embedding=training.deep_learning.word_embeddings.create_embedding_matrix:main',
+
             # train lstm
             'train-lstm=training.deep_learning.lstm.notetaggerlstm:train_lstm',
 
