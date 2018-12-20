@@ -60,9 +60,9 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
     def _create_model(self):
         input_layer = layers.Input(shape=(self._config["notetagger_params"]['window_size'] * 2,), name='input_layer')
         model_layer = self._embedding_layer(input_layer)
-        model_layer = layers.Dropout(self._config['model_params']['lstm_dropout'])(model_layer)
-        for i, lstm_layer in enumerate(self._config['model_params']['lstm_layers']):
-            return_sequences = True if i < len(self._config['model_params']['lstm_layers']) - 1 else False
+        model_layer = layers.Dropout(self._config['model_params']['model_config']['lstm_dropout'])(model_layer)
+        for i, lstm_layer in enumerate(self._config['model_params']['model_config']['lstm_layers']):
+            return_sequences = i < len(self._config['model_params']['model_config']['lstm_layers']) - 1
             model_layer = layers.Bidirectional(
                 layers.LSTM(
                     lstm_layer,
