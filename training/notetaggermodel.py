@@ -39,9 +39,7 @@ class NoteTaggerModelTrain:
             stride_length (int): stride for sliding window, used only if `word_tags` is `None`
             grid_search (bool): grid search over parameters before training the final model
         """
-
-        # create model id by appending the datetime the model was trained
-        self._model_id = model_name + datetime.now().strftime('%Y-%m-%dv%H-%m')
+        self._model_name = model_name
 
         self._raw_data = data
         self._text_column_name = text_column_name
@@ -56,6 +54,11 @@ class NoteTaggerModelTrain:
         self._config["notetagger_params"]['word_tags'] = word_tags
         self._config["notetagger_params"]['stride_length'] = stride_length
         self._config["notetagger_params"]['grid_search'] = grid_search
+
+    @property
+    def _model_id(self):
+        # create model id by appending the datetime the model was trained
+        return self._model_name + datetime.today().strftime('%Y-%m-%dv%H-%m')
 
     def _tokenize_text(self, raw_data):
         """
@@ -120,7 +123,8 @@ class NoteTaggerModelTrain:
 
     def _fit_model(self,
                    X_train,
-                   y_train):
+                   y_train,
+                   **kwargs):
         """
         Fits a model to training data
 
@@ -132,9 +136,9 @@ class NoteTaggerModelTrain:
         if self._config["notetagger_params"]['grid_search']:
             self._grid_seach_model()
 
-        self._model.fit(X_train, y_train)
+        self._model.fit(X_train, y_train, **kwargs)
 
-    def train_model(self, validation_data=None, store_result=True):
+    def train_model(self, validation_data=None, store_result=True, **kwargs):
         """
         Processes the raw data, trains a model, and validates it if validation data provided
 
@@ -144,7 +148,7 @@ class NoteTaggerModelTrain:
             store_result (bool): store the validation result in a Mongo database
         """
         X_train, y_train = self._process_text(raw_data=self._raw_data)
-        self._fit_model(X_train=X_train, y_train=y_train)
+        self._fit_model(X_train=X_train, y_train=y_train, **kwargs)
         self._create_saved_model()
         if validation_data is not None:
             self._validate_model(validation_data=validation_data, store_result=store_result)

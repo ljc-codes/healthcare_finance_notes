@@ -4,7 +4,8 @@ import argparse
 import dill as pickle
 import pandas as pd
 import numpy as np
-from keras import layers, Model
+from keras import layers, Model, callbacks
+
 
 from training.notetaggermodel import NoteTaggerModelTrain
 from training.notetaggermodel import NoteTaggerTrainedModel
@@ -59,6 +60,7 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
     def _create_model(self):
         input_layer = layers.Input(shape=(self._config["notetagger_params"]['window_size'] * 2,), name='input_layer')
         model_layer = self._embedding_layer(input_layer)
+        model_layer = layers.Dropout(self._config['model_params']['lstm_dropout'])(model_layer)
         for i, lstm_layer in enumerate(self._config['model_params']['lstm_layers']):
             return_sequences = True if i < len(self._config['model_params']['lstm_layers']) - 1 else False
             model_layer = layers.Bidirectional(
@@ -189,6 +191,24 @@ def train_lstm():
                         type=str,
                         help='path to validation data, must be jsonl')
 
+    parser.add_argument('--epochs',
+                        '-e',
+                        default=5,
+                        type=int,
+                        help='number of epochs to train for')
+
+    parser.add_argument('--batch_size',
+                        '-bs',
+                        default=64,
+                        type=int,
+                        help='size of the model mini batches')
+
+    parser.add_argument('--validation_split',
+                        '-vs',
+                        default=0.1,
+                        type=float,
+                        help='size of validation set during training')
+
     args = parser.parse_args()
 
     # load data and initialize model trainer
@@ -205,9 +225,16 @@ def train_lstm():
         stride_length=args.stride_length,
         grid_search=False)
 
+    model_callbacks = [callbacks.EarlyStopping(monitor='val_loss', patience=3)]
+
     # load validation data and train model
     validation_data = pd.read_json(args.validation_data_path, orient='records', lines=True)
-    lstm_trainer.train_model(validation_data=validation_data)
+    lstm_trainer.train_model(
+        validation_data=validation_data,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        validation_split=args.validation_split,
+        callbacks=model_callbacks)
 
 
 class NoteTaggerTrainedLSTM(NoteTaggerTrainedModel):
