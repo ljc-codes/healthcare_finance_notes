@@ -1,10 +1,13 @@
 import json
 import argparse
+import tempfile
+import os
 
 import dill as pickle
 import pandas as pd
 import numpy as np
-from keras import layers, Model, callbacks
+from keras import layers, Model
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
 from training.notetaggermodel import NoteTaggerModelTrain
@@ -60,9 +63,9 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
     def _create_model(self):
         input_layer = layers.Input(shape=(self._config["notetagger_params"]['window_size'] * 2,), name='input_layer')
         model_layer = self._embedding_layer(input_layer)
-        model_layer = layers.Dropout(self._config['model_params']['model_config']['lstm_dropout'])(model_layer)
-        for i, lstm_layer in enumerate(self._config['model_params']['model_config']['lstm_layers']):
-            return_sequences = i < len(self._config['model_params']['model_config']['lstm_layers']) - 1
+        model_layer = layers.Dropout(self._config['model_params']['model']['lstm_dropout'])(model_layer)
+        for i, lstm_layer in enumerate(self._config['model_params']['model']['lstm_layers']):
+            return_sequences = i < len(self._config['model_params']['model']['lstm_layers']) - 1
             model_layer = layers.Bidirectional(
                 layers.LSTM(
                     lstm_layer,
@@ -71,7 +74,7 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
         dense_layer = layers.Dense(1, name='dense_layer')(model_layer)
         output_layer = layers.Activation('sigmoid', name='activation_layer')(dense_layer)
         self._model = Model(input_layer, output_layer)
-        self._model.compile(**self._config['model_params']['compile_config'])
+        self._model.compile(**self._config['model_params']['compile'])
         print(self._model.summary())
 
     def _token_to_index(self, tokenized_data):
@@ -117,11 +120,30 @@ class NoteTaggerLSTMTrain(NoteTaggerModelTrain):
 
         # set word_to_index
         self._trained_model._word_to_index = self._word_to_index
+
+        # load the best model weights and store it
+        best_model_weights = os.path.join(self._checkpoints_save_dir, os.listdir(self._checkpoints_save_dir)[-1])
+        self._model.load_weights(best_model_weights)
         self._trained_model._model = self._model
 
         # save model to pickle file
         with open(self._model_save_file, 'wb') as outfile:
             pickle.dump(self._trained_model, outfile)
+
+    def train_model(self, validation_data=None, store_result=True):
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+
+            model_callbacks = [EarlyStopping(**self._config['model_params']['callbacks']['early_stopping']),
+                               ModelCheckpoint(filepath=os.path.join(temp_dir, '{epoch:02d}-{val_loss:.4f}.hdf5'),
+                                               **self._config['model_params']['callbacks']['checkpoints'])]
+
+            self._checkpoints_save_dir = temp_dir
+
+            super().train_model(validation_data=validation_data,
+                                store_result=store_result,
+                                callbacks=model_callbacks,
+                                **self._config['model_params']['training'])
 
 
 def train_lstm():
@@ -191,24 +213,6 @@ def train_lstm():
                         type=str,
                         help='path to validation data, must be jsonl')
 
-    parser.add_argument('--epochs',
-                        '-e',
-                        default=5,
-                        type=int,
-                        help='number of epochs to train for')
-
-    parser.add_argument('--batch_size',
-                        '-bs',
-                        default=64,
-                        type=int,
-                        help='size of the model mini batches')
-
-    parser.add_argument('--validation_split',
-                        '-vs',
-                        default=0.1,
-                        type=float,
-                        help='size of validation set during training')
-
     args = parser.parse_args()
 
     # load data and initialize model trainer
@@ -225,16 +229,10 @@ def train_lstm():
         stride_length=args.stride_length,
         grid_search=False)
 
-    model_callbacks = [callbacks.EarlyStopping(monitor='val_loss', patience=3)]
-
     # load validation data and train model
     validation_data = pd.read_json(args.validation_data_path, orient='records', lines=True)
     lstm_trainer.train_model(
-        validation_data=validation_data,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        validation_split=args.validation_split,
-        callbacks=model_callbacks)
+        validation_data=validation_data)
 
 
 class NoteTaggerTrainedLSTM(NoteTaggerTrainedModel):

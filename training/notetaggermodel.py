@@ -39,7 +39,8 @@ class NoteTaggerModelTrain:
             stride_length (int): stride for sliding window, used only if `word_tags` is `None`
             grid_search (bool): grid search over parameters before training the final model
         """
-        self._model_name = model_name
+        # create model id by appending the datetime the model was trained
+        self._model_id = model_name + datetime.today().strftime('%Y-%m-%dv%H-%M')
 
         self._raw_data = data
         self._text_column_name = text_column_name
@@ -54,11 +55,6 @@ class NoteTaggerModelTrain:
         self._config["notetagger_params"]['word_tags'] = word_tags
         self._config["notetagger_params"]['stride_length'] = stride_length
         self._config["notetagger_params"]['grid_search'] = grid_search
-
-    @property
-    def _model_id(self):
-        # create model id by appending the datetime the model was trained
-        return self._model_name + datetime.today().strftime('%Y-%m-%dv%H-%m')
 
     def _tokenize_text(self, raw_data):
         """

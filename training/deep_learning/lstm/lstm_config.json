@@ -1,13 +1,29 @@
 {
 	"embedding_path": "data/embedding_layer/embedding_matrix_50d.pkl",
 	"word_to_index": "data/embedding_layer/word_to_index_50d.json",
-	"model_config": {
+	"model": {
 		"lstm_layers": [128, 128],
 		"lstm_dropout": 0.5
 	},
-	"compile_config": {
+	"compile": {
 		"optimizer": "adam",
 		"loss": "binary_crossentropy",
 		"metrics": ["accuracy"]
+	},
+	"training": {
+		"epochs": 5,
+		"batch_size": 64,
+		"validation_split": 0.1
+	},
+	"callbacks": {
+		"early_stopping": {
+			"monitor": "val_loss",
+			"patience": 3
+		},
+		"checkpoints": {
+			"monitor": "val_loss",
+			"save_best_only": true,
+			"save_weights_only": true
+		}
 	}
 }
