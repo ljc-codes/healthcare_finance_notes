@@ -254,6 +254,7 @@ class TableGenerator:
                                        for col in self._categorical_columns] +
                                       [self.notes_data[col] for col in self._numerical_columns],
                                       axis=1)
+        print(training_features)
 
         # drop columns to allow for regression convergence
         training_features.drop(self._features_to_exclude, axis=1, inplace=True)
