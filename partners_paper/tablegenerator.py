@@ -258,7 +258,8 @@ class TableGenerator:
                                       axis=1)
 
         # drop records with unusable features
-        training_features = training_features[training_features[self._features_to_drop] != 1]
+        for feature in self._features_to_drop:
+            training_features = training_features[training_features[feature] != 1]
 
         # drop columns to allow for regression convergence
         training_features.drop(self._features_to_exclude, axis=1, inplace=True)
