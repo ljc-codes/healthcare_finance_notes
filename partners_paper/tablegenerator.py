@@ -20,7 +20,8 @@ class TableGenerator:
                  patient_id_column='subject_num',
                  categorical_columns=['gender', 'race'],
                  numerical_columns=['age_at_visit'],
-                 features_to_exclude=['gender_M', 'gender_U', 'race_White']):
+                 features_to_exclude=['gender_M', 'race_White'],
+                 features_to_drop=['gender_U']):
         """
         Initializes the Table Generator Table used to produce tables for publication
 
@@ -45,6 +46,7 @@ class TableGenerator:
         self._categorical_columns = categorical_columns
         self._numerical_columns = numerical_columns
         self._features_to_exclude = features_to_exclude
+        self._features_to_drop = features_to_drop
 
         # load data and merge together
         predictions = pd.read_json(predictions_filepath, orient='records', lines=True)
@@ -255,9 +257,11 @@ class TableGenerator:
                                       [self.notes_data[col] for col in self._numerical_columns],
                                       axis=1)
 
+        # drop records with unusable features
+        training_features = training_features[training_features[self._features_to_drop] != 1]
+
         # drop columns to allow for regression convergence
         training_features.drop(self._features_to_exclude, axis=1, inplace=True)
-        print(training_features)
 
         # fit model
         logit = sm.Logit(self.notes_data[self._prediction_column], training_features)
