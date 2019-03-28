@@ -41,6 +41,7 @@ class TableGenerator:
         """
 
         self._prediction_column = prediction_column
+        self._note_id_column = note_id_column
         self._patient_id_column = patient_id_column
         self._categorical_columns = categorical_columns
         self._numerical_columns = numerical_columns
@@ -49,9 +50,9 @@ class TableGenerator:
         # load data and merge together
         predictions = pd.read_json(predictions_filepath, orient='records', lines=True)
         patient_data = pd.read_csv(patient_data_filepath, sep='\t', parse_dates=[note_date_column])
-        self.notes_data = patient_data.merge(predictions[[note_id_column, prediction_column]],
+        self.notes_data = patient_data.merge(predictions[[self._note_id_column, prediction_column]],
                                              how='left',
-                                             on=note_id_column)
+                                             on=self._note_id_column)
 
         # clean categorical columns
         self._clean_categorical()
@@ -253,6 +254,9 @@ class TableGenerator:
         """
         Runs all table creation functions in class
         """
+        note_counts = self.notes.groupby(self._patient_id_column)[self._note_id_column].count()
+        print('Notes per Patient | Mean {:.4f} | Std {:.4f}').format(note_counts.mean(), note_counts.std())
+        print('\n')
         self.create_summary_table()
         print('\n')
         self.create_numerical_table()
