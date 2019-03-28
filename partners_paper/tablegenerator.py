@@ -18,8 +18,8 @@ class TableGenerator:
                  note_id_column='note_id',
                  note_date_column='note_date',
                  patient_id_column='subject_num',
-                 categorical_columns=['gender', 'race'],
-                 numerical_columns=['age_at_visit'],
+                 categorical_columns=['gender', 'race', 'marital_status', 'InsuranceType'],
+                 numerical_columns=['age_at_visit', 'zip_median_income'],
                  features_to_exclude=['gender_M', 'gender_U', 'race_White']):
         """
         Initializes the Table Generator Table used to produce tables for publication
@@ -53,6 +53,9 @@ class TableGenerator:
                                              how='left',
                                              on=note_id_column)
 
+        # clean categorical columns
+        self._clean_categorical()
+
         # format predictions column
         self.notes_data[prediction_column].fillna(0, inplace=True)
         self.notes_data[prediction_column] = (self.notes_data[prediction_column] > predictions_threshold)
@@ -68,6 +71,20 @@ class TableGenerator:
         self.patients_wout_tags = (self.notes_data[~self.notes_data[self._patient_id_column].isin(patient_ids)]
                                    .sort_values(note_date_column)
                                    .drop_duplicates(self._patient_id_column))
+
+    def _clean_categorical(self,
+                           insurance_type_column='InsuranceType',
+                           marital_status_column='marital_status'):
+        """
+        Cleans categorical columns for analysis
+
+        Keyword Arguments:
+            insurance_type_column (str): column name of insurance type
+            marital_status_column (str): column name of marital status
+        """
+        self.notes_data[insurance_type_column] = self.notes_data[insurance_type_column].fillna('Other/Unknown')
+        self.notes_data[marital_status_column] = self.notes_data[marital_status_column].map(
+            lambda x: "Other/Unknown" if x not in ["MARRIED", "SINGLE", "WIDOW", "DIVORCED"] else x)
 
     def _get_total_stats(self,
                          df):
