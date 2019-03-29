@@ -65,6 +65,9 @@ class TableGenerator:
         financial_notes_indices = self.notes_data[self._prediction_column] == 1
         patient_ids = self.notes_data[financial_notes_indices][self._patient_id_column].unique()
 
+        # get note counts per patient
+        self._note_counts = self.notes_data.groupby(self._patient_id_column)[self._note_id_column].count()
+
         # separate data into those patients w/ tags and those patients w/out tags, keeping the first patient visit
         self.patients_w_tags = (self.notes_data[self.notes_data[self._patient_id_column].isin(patient_ids)]
                                 .sort_values(note_date_column)
@@ -254,8 +257,7 @@ class TableGenerator:
         """
         Runs all table creation functions in class
         """
-        note_counts = self.notes_data.groupby(self._patient_id_column)[self._note_id_column].count()
-        print('Notes per Patient | Mean {:.4f} | Std {:.4f}'.format(note_counts.mean(), note_counts.std()))
+        print('Notes per Patient | Mean {:.4f} | Std {:.4f}'.format(self._note_counts.mean(), self._note_counts.std()))
         print('\n')
         self.create_summary_table()
         print('\n')
@@ -270,17 +272,24 @@ class TableGenerator:
         Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
         """
 
+        regression_data = self.notes_data.sort_values(self.prediction_column, ascending=False).drop_duplicates(self.patient_id_column)
+        print(regression_data.shape)
+        print(regression_data[self._prediction_column].value_counts())
+        regression_data = regression_data.merge(self._note_counts, how='inner', left_on=self._patient_id_column, right_index=True)
+        print(regression_data.shape)
+        print(regression_data[self._prediction_column].value_counts())
+
         # creat matrix of training features
-        training_features = pd.concat([pd.get_dummies(self.notes_data[col], prefix=col)
+        training_features = pd.concat([pd.get_dummies(regression_data[col], prefix=col)
                                        for col in self._categorical_columns] +
-                                      [self.notes_data[col] for col in self._numerical_columns],
+                                      [regression_data[col] for col in self._numerical_columns],
                                       axis=1)
 
         # drop columns to allow for regression convergence
         training_features.drop(self._features_to_exclude, axis=1, inplace=True)
 
         # fit model
-        logit = sm.Logit(self.notes_data[self._prediction_column], training_features)
+        logit = sm.Logit(regression_data[self._prediction_column], training_features)
         result = logit.fit()
 
         # create dataframe of results
