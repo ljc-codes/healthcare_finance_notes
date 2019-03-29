@@ -258,7 +258,8 @@ class TableGenerator:
         """
         Runs all table creation functions in class
         """
-        print('Notes per Patient | Mean {:.4f} | Std {:.4f}'.format(self._note_counts.mean(), self._note_counts.std()))
+        print('Notes per Patient | Mean {:.4f} | Std {:.4f}'.format(
+            self._note_counts['note_count'].mean(), self._note_counts['note_count'].std()))
         print('\n')
         self.create_summary_table()
         print('\n')
