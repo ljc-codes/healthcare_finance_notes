@@ -187,6 +187,7 @@ class TableGenerator:
         f_exp = self._calc_chi2_counts(self.patients_wout_tags, column_label, column_value, False)
 
         # run chi2 test
+        print(f_obs, f_exp)
         chi2_test = chi2_contingency(np.array([f_obs, f_exp]))
 
         # create response json
@@ -214,6 +215,7 @@ class TableGenerator:
 
             # loop through each column value in the column
             for column_value in column_values:
+                print(column_value, column_label)
                 categorical_table_data.append(
                     self._calc_chi2_test(column_label=column_label, column_value=column_value))
 
