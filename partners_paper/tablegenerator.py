@@ -293,6 +293,7 @@ class TableGenerator:
 
         for col in null_columns:
             regression_data = regression_data[regression_data[col].notnull()]
+            print(regression_data.shape)
 
         # creat matrix of training features
         training_features = pd.concat([pd.get_dummies(regression_data[col], prefix=col)
