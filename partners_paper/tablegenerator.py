@@ -23,7 +23,7 @@ class TableGenerator:
                  features_to_exclude=['gender_M',
                                       'gender_U',
                                       'race_White',
-                                      'marital_status_Other/Unknown',
+                                      'marital_status_SINGLE',
                                       'InsuranceType_Other/Unknown']):
         """
         Initializes the Table Generator Table used to produce tables for publication
