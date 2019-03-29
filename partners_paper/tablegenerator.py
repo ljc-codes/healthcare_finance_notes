@@ -185,8 +185,8 @@ class TableGenerator:
 
         # create response json
         chi2_data = [column_value,
-                     '{0:,} ({1:.2f}%)'.format(f_obs[0], f_obs[0] / sum(f_obs) * 100),
-                     '{0:,} ({1:.2f}%)'.format(f_exp[0], f_exp[0] / sum(f_exp) * 100),
+                     '{0:,} ({1:.2f}%)'.format(f_obs[0], f_obs[0] / (f_obs[0] + f_exp[0]) * 100),
+                     '{0:,} ({1:.2f}%)'.format(f_exp[0], f_exp[0] / (f_obs[0] + f_exp[0]) * 100),
                      '{0:.2f}'.format(chi2_test[0]),
                      self._format_p_value(chi2_test[1])]
         return chi2_data
@@ -208,7 +208,6 @@ class TableGenerator:
 
             # loop through each column value in the column
             for column_value in column_values:
-                print(column_value, column_label)
                 categorical_table_data.append(
                     self._calc_chi2_test(column_label=column_label, column_value=column_value))
 
