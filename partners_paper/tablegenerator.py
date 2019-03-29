@@ -278,7 +278,7 @@ class TableGenerator:
             self._prediction_column, ascending=False).drop_duplicates(self._patient_id_column)
         print(regression_data.shape)
         print(regression_data[self._prediction_column].value_counts())
-        regression_data['note_count'] = regression_data.merge(
+        regression_data = regression_data.merge(
             self._note_counts, how='inner', on=self._patient_id_column)
         print(regression_data.shape)
         print(regression_data[self._prediction_column].value_counts())
