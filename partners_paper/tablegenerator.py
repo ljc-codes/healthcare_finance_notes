@@ -164,7 +164,7 @@ class TableGenerator:
             mask = df[column_label] == column_value
         else:
             mask = df[column_label] != column_value
-        pos_count = df[mask & (df[self._prediction_column] == True)].shape[0]
+        pos_count = df[mask][self._prediction_column].sum()
         neg_count = df.shape[0] - pos_count
         f_count = [pos_count, neg_count]
         return f_count
@@ -183,8 +183,8 @@ class TableGenerator:
         """
 
         # format data for test
-        f_obs = self._calc_chi2_counts(self.patients_w_tags, column_label, column_value, True)
-        f_exp = self._calc_chi2_counts(self.patients_wout_tags, column_label, column_value, False)
+        f_obs = self._calc_chi2_counts(self._patients_data, column_label, column_value, True)
+        f_exp = self._calc_chi2_counts(self._patients_data, column_label, column_value, False)
 
         # run chi2 test
         print(f_obs, f_exp)
