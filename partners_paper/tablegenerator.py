@@ -24,7 +24,7 @@ class TableGenerator:
                                       'gender_U',
                                       'race_White',
                                       'marital_status_SINGLE',
-                                      'InsuranceType_Other/Unknown']):
+                                      'InsuranceType_Private']):
         """
         Initializes the Table Generator Table used to produce tables for publication
 
