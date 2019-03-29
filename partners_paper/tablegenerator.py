@@ -255,7 +255,7 @@ class TableGenerator:
         Runs all table creation functions in class
         """
         note_counts = self.notes_data.groupby(self._patient_id_column)[self._note_id_column].count()
-        print('Notes per Patient | Mean {:.4f} | Std {:.4f}').format(note_counts.mean(), note_counts.std())
+        print('Notes per Patient | Mean {:.4f} | Std {:.4f}'.format(note_counts.mean(), note_counts.std()))
         print('\n')
         self.create_summary_table()
         print('\n')
