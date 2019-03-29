@@ -164,7 +164,7 @@ class TableGenerator:
             mask = df[column_label] == column_value
         else:
             mask = df[column_label] != column_value
-        pos_count = df[mask][self._prediction_column].sum()
+        pos_count = df[mask & (df[self._prediction_column] == True)].shape[0]
         neg_count = df.shape[0] - pos_count
         f_count = [pos_count, neg_count]
         return f_count
