@@ -272,7 +272,7 @@ class TableGenerator:
         Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
         """
 
-        regression_data = self.notes_data.sort_values(self.prediction_column, ascending=False).drop_duplicates(self.patient_id_column)
+        regression_data = self.notes_data.sort_values(self._prediction_column, ascending=False).drop_duplicates(self.patient_id_column)
         print(regression_data.shape)
         print(regression_data[self._prediction_column].value_counts())
         regression_data = regression_data.merge(self._note_counts, how='inner', left_on=self._patient_id_column, right_index=True)
