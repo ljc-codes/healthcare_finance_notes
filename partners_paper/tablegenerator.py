@@ -74,7 +74,6 @@ class TableGenerator:
         self._note_counts.columns = [self._patient_id_column, 'note_count']
 
         # separate data into those patients w/ tags and those patients w/out tags, keeping the first patient visit
-        self._patients_data = self.notes_data.sort_values(self._prediction_column).drop_duplicates(self._patient_id_column)
         self.patients_w_tags = (self.notes_data[self.notes_data[self._patient_id_column].isin(patient_ids)]
                                 .sort_values(note_date_column)
                                 .drop_duplicates(self._patient_id_column))
@@ -147,7 +146,7 @@ class TableGenerator:
         formatted_p_value = '<0.001' if p_value < 0.001 else '{0:.3f}'.format(p_value)
         return formatted_p_value
 
-    def _calc_chi2_counts(self, df, column_label, column_value, obs):
+    def _calc_chi2_counts(self, df, column_label, column_value):
         """
         Get counts of the desired value and all other records less the value for use in `_calc_chi2_test`
 
@@ -159,12 +158,7 @@ class TableGenerator:
         Returns:
             f_count (list of int): count of both positive and negative instances of the `column_value`
         """
-
-        if obs:
-            mask = df[column_label] == column_value
-        else:
-            mask = df[column_label] != column_value
-        pos_count = df[mask][self._prediction_column].sum()
+        pos_count = df[df[column_label] == column_value].shape[0]
         neg_count = df.shape[0] - pos_count
         f_count = [pos_count, neg_count]
         return f_count
@@ -183,11 +177,10 @@ class TableGenerator:
         """
 
         # format data for test
-        f_obs = self._calc_chi2_counts(self._patients_data, column_label, column_value, True)
-        f_exp = self._calc_chi2_counts(self._patients_data, column_label, column_value, False)
+        f_obs = self._calc_chi2_counts(self.patients_w_tags, column_label, column_value)
+        f_exp = self._calc_chi2_counts(self.patients_wout_tags, column_label, column_value)
 
         # run chi2 test
-        print(f_obs, f_exp)
         chi2_test = chi2_contingency(np.array([f_obs, f_exp]))
 
         # create response json
@@ -297,7 +290,7 @@ class TableGenerator:
         # creat matrix of training features
         training_features = pd.concat([pd.get_dummies(regression_data[col], prefix=col)
                                        for col in self._categorical_columns] +
-                                      [regression_data[col] for col in self._numerical_columns],
+                                      [regression_data[col] for col in self._numerical_columns + ['note_count']],
                                       axis=1)
 
         # drop columns to allow for regression convergence
