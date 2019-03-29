@@ -74,7 +74,7 @@ class TableGenerator:
         self._note_counts.columns = [self._patient_id_column, 'note_count']
 
         # separate data into those patients w/ tags and those patients w/out tags, keeping the first patient visit
-        self._patients_data = self.notes_data.sort_values(self._prediction_column, ascending=False).drop_duplicates(self._patient_id_column)
+        self._patients_data = self.notes_data.sort_values(self._prediction_column).drop_duplicates(self._patient_id_column)
         self.patients_w_tags = (self.notes_data[self.notes_data[self._patient_id_column].isin(patient_ids)]
                                 .sort_values(note_date_column)
                                 .drop_duplicates(self._patient_id_column))
