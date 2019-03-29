@@ -269,19 +269,19 @@ class TableGenerator:
         print('\n')
         self.create_logistic_regression_table()
 
-    def create_logistic_regression_table(self):
+    def create_logistic_regression_table(self, null_columns=['zip_median_income']):
         """
         Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
         """
 
         regression_data = self.notes_data.sort_values(
             self._prediction_column, ascending=False).drop_duplicates(self._patient_id_column)
-        print(regression_data.shape)
-        print(regression_data[self._prediction_column].value_counts())
         regression_data = regression_data.merge(
             self._note_counts, how='inner', on=self._patient_id_column)
-        print(regression_data.shape)
-        print(regression_data[self._prediction_column].value_counts())
+
+        for col in null_columns:
+            regression_data = regression_data[regression_data[col].notnull()]
+            print(regression_data.shape)
 
         # creat matrix of training features
         training_features = pd.concat([pd.get_dummies(regression_data[col], prefix=col)
