@@ -20,7 +20,11 @@ class TableGenerator:
                  patient_id_column='subject_num',
                  categorical_columns=['gender', 'race', 'marital_status', 'InsuranceType'],
                  numerical_columns=['age_at_visit', 'zip_median_income'],
-                 features_to_exclude=['gender_M', 'gender_U', 'race_White']):
+                 features_to_exclude=['gender_M',
+                                      'gender_U',
+                                      'race_White',
+                                      'marital_status_Other/Unknown',
+                                      'InsuranceType_Other/Unknown']):
         """
         Initializes the Table Generator Table used to produce tables for publication
 
