@@ -185,8 +185,11 @@ class TableGenerator:
 
         # create response json
         chi2_data = [column_value,
-                     '{0:,} ({1:.2f}%)'.format(f_obs[0], f_obs[0] / (f_obs[0] + f_exp[0]) * 100),
-                     '{0:,} ({1:.2f}%)'.format(f_exp[0], f_exp[0] / (f_obs[0] + f_exp[0]) * 100),
+                     '{0:,} ({1:.2%} / {2:.2%})'.format(f_obs[0],
+                                                        f_obs[0] / (f_obs[0] + f_exp[0]),
+                                                        f_obs[1] / (f_obs[1] + f_exp[1])),
+                     '{0:,} ({1:.2%})'.format(f_exp[0],
+                                              f_exp[0] / (f_obs[0] + f_exp[0])),
                      '{0:.2f}'.format(chi2_test[0]),
                      self._format_p_value(chi2_test[1])]
         return chi2_data
