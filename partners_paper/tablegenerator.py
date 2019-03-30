@@ -294,15 +294,16 @@ class TableGenerator:
 
         # creat matrix of training features
         self.training_features = pd.concat([pd.get_dummies(self.regression_data[col], prefix=col)
-                                       for col in self._categorical_columns] +
-                                      [self.regression_data[col] for col in self._numerical_columns + ['note_count']],
-                                      axis=1)
+                                           for col in self._categorical_columns] +
+                                           [self.regression_data[col]
+                                            for col in self._numerical_columns + ['note_count']],
+                                           axis=1)
 
         # drop columns to allow for regression convergence
         self.training_features.drop(self._features_to_exclude, axis=1, inplace=True)
 
         # fit model
-        logit = sm.Logit(regression_data[self._prediction_column], training_features)
+        logit = sm.Logit(self.regression_data[self._prediction_column], self.training_features)
         self.result = logit.fit()
 
         # create dataframe of results
