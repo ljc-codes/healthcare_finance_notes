@@ -304,6 +304,8 @@ class TableGenerator:
         # fit model
         logit = sm.Logit(regression_data[self._prediction_column], training_features)
         result = logit.fit()
+        print(result)
+        print(result.params)
 
         # create dataframe of results
         regression_results = pd.DataFrame()
