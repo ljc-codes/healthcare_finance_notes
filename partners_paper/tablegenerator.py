@@ -290,7 +290,7 @@ class TableGenerator:
             self._note_counts, how='inner', on=self._patient_id_column)
 
         for col in null_columns:
-            self.regression_data = self.regression_data[regression_data[col].notnull()]
+            self.regression_data = self.regression_data[self.regression_data[col].notnull()]
 
         # creat matrix of training features
         self.training_features = pd.concat([pd.get_dummies(self.regression_data[col], prefix=col)
