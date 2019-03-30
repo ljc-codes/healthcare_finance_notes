@@ -20,10 +20,10 @@ class TableGenerator:
                  patient_id_column='subject_num',
                  categorical_columns=['gender', 'race', 'marital_status', 'InsuranceType'],
                  numerical_columns=['age_at_visit', 'zip_median_income'],
-                 features_to_exclude=['gender_M',
+                 features_to_exclude=['gender_F',
                                       'gender_U',
                                       'race_White',
-                                      'marital_status_SINGLE',
+                                      'marital_status_MARRIED',
                                       'InsuranceType_Private']):
         """
         Initializes the Table Generator Table used to produce tables for publication
@@ -59,7 +59,7 @@ class TableGenerator:
                                              on=self._note_id_column)
 
         # clean categorical columns
-        self._clean_categorical()
+        self._clean_demographic()
 
         # format predictions column
         self.notes_data[prediction_column].fillna(0, inplace=True)
@@ -81,7 +81,9 @@ class TableGenerator:
                                    .sort_values(note_date_column)
                                    .drop_duplicates(self._patient_id_column))
 
-    def _clean_categorical(self,
+    def _clean_demographic(self,
+                           zip_median_income_column='zip_median_income',
+                           zip_median_income_scale=1000,
                            insurance_type_column='InsuranceType',
                            marital_status_column='marital_status'):
         """
@@ -91,6 +93,7 @@ class TableGenerator:
             insurance_type_column (str): column name of insurance type
             marital_status_column (str): column name of marital status
         """
+        self.notes_data[zip_median_income_column] = self.notes_data[zip_median_income_column] / zip_median_income_scale
         self.notes_data[insurance_type_column] = self.notes_data[insurance_type_column].fillna('Other/Unknown')
         self.notes_data[marital_status_column] = self.notes_data[marital_status_column].map(
             lambda x: "Other/Unknown" if x not in ["MARRIED", "SINGLE", "WIDOW", "DIVORCED"] else x)
