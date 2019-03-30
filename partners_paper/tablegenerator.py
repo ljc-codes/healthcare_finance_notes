@@ -301,6 +301,7 @@ class TableGenerator:
 
         # drop columns to allow for regression convergence
         self.training_features.drop(self._features_to_exclude, axis=1, inplace=True)
+        self.training_features['intercept'] = 1.0
 
         # fit model
         logit = sm.Logit(self.regression_data[self._prediction_column], self.training_features)
