@@ -286,7 +286,7 @@ class TableGenerator:
 
         self.regression_data = self.notes_data.sort_values(
             self._prediction_column, ascending=False).drop_duplicates(self._patient_id_column)
-        self.regression_data = regression_data.merge(
+        self.regression_data = self.regression_data.merge(
             self._note_counts, how='inner', on=self._patient_id_column)
 
         for col in null_columns:
