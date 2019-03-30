@@ -284,35 +284,33 @@ class TableGenerator:
         Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
         """
 
-        regression_data = self.notes_data.sort_values(
+        self.regression_data = self.notes_data.sort_values(
             self._prediction_column, ascending=False).drop_duplicates(self._patient_id_column)
-        regression_data = regression_data.merge(
+        self.regression_data = regression_data.merge(
             self._note_counts, how='inner', on=self._patient_id_column)
 
         for col in null_columns:
-            regression_data = regression_data[regression_data[col].notnull()]
+            self.regression_data = self.regression_data[regression_data[col].notnull()]
 
         # creat matrix of training features
-        training_features = pd.concat([pd.get_dummies(regression_data[col], prefix=col)
+        self.training_features = pd.concat([pd.get_dummies(self.regression_data[col], prefix=col)
                                        for col in self._categorical_columns] +
-                                      [regression_data[col] for col in self._numerical_columns + ['note_count']],
+                                      [self.regression_data[col] for col in self._numerical_columns + ['note_count']],
                                       axis=1)
 
         # drop columns to allow for regression convergence
-        training_features.drop(self._features_to_exclude, axis=1, inplace=True)
+        self.training_features.drop(self._features_to_exclude, axis=1, inplace=True)
 
         # fit model
         logit = sm.Logit(regression_data[self._prediction_column], training_features)
-        result = logit.fit()
-        print(result)
-        print(result.params)
+        self.result = logit.fit()
 
         # create dataframe of results
         regression_results = pd.DataFrame()
-        regression_results['odds_ratio'] = np.exp(result.params)
-        regression_results['lower_bound'] = np.exp(result.conf_int()[0])
-        regression_results['upper_bound'] = np.exp(result.conf_int()[1])
-        regression_results['p_value'] = result.pvalues
+        regression_results['odds_ratio'] = np.exp(self.result.params)
+        regression_results['lower_bound'] = np.exp(self.result.conf_int()[0])
+        regression_results['upper_bound'] = np.exp(self.result.conf_int()[1])
+        regression_results['p_value'] = self.result.pvalues
 
         # format data for regression table
         regression_table_data = []
