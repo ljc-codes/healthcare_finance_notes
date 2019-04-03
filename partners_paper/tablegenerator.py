@@ -140,15 +140,18 @@ class TableGenerator:
 
         # get stats for both patients and notes
         patient_stats = (self.notes_data.sort_values(self._prediction_column, ascending=False)
-            .drop_duplicates(self._patient_id_column))
+                    .drop_duplicates(self._patient_id_column))
 
         print(tabulate([['Notes per Patient',
-                        self._note_counts['note_count'].mean(),
-                        self._note_counts['note_count'].std()],
+                         '{:.3f}'.format(self._note_counts['note_count'].mean()),
+                         '{:.3f}'.format(self._note_counts['note_count'].std())],
                        ['Age',
-                        patient_stats['age_at_visit'].mean(),
-                        patient_stats['age_at_visit'].std()]],
+                        '{:.3f}'.format(patient_stats['age_at_visit'].mean()),
+                        '{:.3f}'.format(patient_stats['age_at_visit'].std())]],
                        headers=['', 'Mean', 'Std']))
+
+        print(patient_stats['gender'].value_counts() / patient_stats.shape[0])
+        print(patient_stats['race'].value_counts() / patient_stats.shape[0])
 
     def _format_p_value(self, p_value, num_comparisons=1):
         """
