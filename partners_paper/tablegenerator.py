@@ -69,10 +69,6 @@ class TableGenerator:
         financial_notes_indices = self.notes_data[self._prediction_column] == 1
         patient_ids = self.notes_data[financial_notes_indices][self._patient_id_column].unique()
 
-        # get note counts per patient
-        self._note_counts = self.notes_data.groupby(self._patient_id_column)[self._note_id_column].count().reset_index()
-        self._note_counts.columns = [self._patient_id_column, 'note_count']
-
         # separate data into those patients w/ tags and those patients w/out tags, keeping the first patient visit
         self.patients_w_tags = (self.notes_data[self.notes_data[self._patient_id_column].isin(patient_ids)]
                                 .sort_values(note_date_column)
@@ -132,6 +128,27 @@ class TableGenerator:
         print(tabulate([['Total', patients_stats['total'], notes_stats['total']],
                         ['Financial', patients_stats['financial'], notes_stats['financial']]],
                        headers=['', 'Patients', 'Notes']))
+
+    def create_population_stats_table(self):
+        """
+        Prints a summary table for mean / std for notes per patient and age, and overall distribution of sex and race
+        """
+
+        # get note counts per patient
+        self._note_counts = self.notes_data.groupby(self._patient_id_column)[self._note_id_column].count().reset_index()
+        self._note_counts.columns = [self._patient_id_column, 'note_count']
+
+        # get stats for both patients and notes
+        patient_stats = (self.notes_data.sort_values(self._prediction_column, ascending=False)
+            .drop_duplicates(self._patient_id_column))
+
+        print(tabulate(['Notes per Patient',
+                        self._note_counts['note_count'].mean(),
+                        self._note_counts['note_count'].std()],
+                       ['Age',
+                        patient_stats['age_at_visit'].mean(),
+                        patient_stats['age_at_visit'].std()],
+                       headers=['', 'Mean', 'Std']))
 
     def _format_p_value(self, p_value, num_comparisons=1):
         """
@@ -268,8 +285,7 @@ class TableGenerator:
         """
         Runs all table creation functions in class
         """
-        print('Notes per Patient | Mean {:.4f} | Std {:.4f}'.format(
-            self._note_counts['note_count'].mean(), self._note_counts['note_count'].std()))
+        self.create_population_stats_table()
         print('\n')
         self.create_summary_table()
         print('\n')
