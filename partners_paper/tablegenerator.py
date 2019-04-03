@@ -79,7 +79,7 @@ class TableGenerator:
 
     def _clean_demographic(self,
                            zip_median_income_column='zip_median_income',
-                           zip_median_income_scale=1000,
+                           zip_median_income_scale=10000,
                            insurance_type_column='InsuranceType',
                            marital_status_column='marital_status'):
         """
