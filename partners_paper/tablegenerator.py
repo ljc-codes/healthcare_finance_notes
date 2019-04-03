@@ -154,6 +154,7 @@ class TableGenerator:
         table_data = [[label, '{:.2%}'.format(value)]
                       for label, value in zip(gender_value_counts.index.tolist(),
                                               gender_value_counts.tolist())]
+        table_data.append(['', ''])
 
         race_value_counts = patient_stats['race'].value_counts() / patient_stats.shape[0]
         table_data.extend([[label, '{:.2%}'.format(value)]
