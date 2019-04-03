@@ -150,8 +150,16 @@ class TableGenerator:
                         '{:.3f}'.format(patient_stats['age_at_visit'].std())]],
                        headers=['', 'Mean', 'Std']))
 
-        print(patient_stats['gender'].value_counts() / patient_stats.shape[0])
-        print(patient_stats['race'].value_counts() / patient_stats.shape[0])
+        gender_value_counts = patient_stats['gender'].value_counts() / patient_stats.shape[0]
+        table_data = [[label, '{:.2%}'.format(value)]
+                      for label, value in zip(gender_value_counts.index.tolist(),
+                                              gender_value_counts['gender'].tolist())]
+
+        race_value_counts = patient_stats['race'].value_counts() / patient_stats.shape[0]
+        table_data.extend([[label, '{:.2%}'.format(value)]
+                           for label, value in zip(race_value_counts.index.tolist(),
+                                                   race_value_counts['race'].tolist())])
+        print(tabulate(table_data, headers=['', '% of Total']))
 
     def _format_p_value(self, p_value, num_comparisons=1):
         """
