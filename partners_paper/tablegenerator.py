@@ -359,6 +359,7 @@ class TableGenerator:
         # drop columns to allow for regression convergence
         self.training_features.drop(self._features_to_exclude, axis=1, inplace=True)
 
+        # get unadjusted odds ratios
         raw_ors = {}
         for feature in self.training_features.columns:
             X = self.training_features[[feature]]
@@ -367,7 +368,9 @@ class TableGenerator:
                                 for index, row in results.iterrows()
                                 if index == feature][0]
 
+        # run full regression
         full_regression_results = self._get_regression_results(X=self.training_features, y=y)
+
         # format data for regression table
         regression_table_data = []
         for index, row in full_regression_results.iterrows():
@@ -377,4 +380,5 @@ class TableGenerator:
                           self._format_p_value(row['p_value'])]
             regression_table_data.append(data_point)
 
-        print(tabulate(regression_table_data, headers=['Feature', 'Odds Ratio (95% CI)', 'P Value']))
+        print(tabulate(regression_table_data,
+                       headers=['Feature', 'Unadjusted Odds Ratio (95% CI)', 'Odds Ratio (95% CI)', 'P Value']))
