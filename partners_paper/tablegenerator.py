@@ -312,6 +312,28 @@ class TableGenerator:
         print('\n')
         self.create_logistic_regression_table()
 
+    def _get_regression_results(self, X, y):
+        """
+        Runs logistic regression and returns a df with odds_ratio, lower_bound and upper bound CI
+        """
+
+        # fit regression
+        X['intercept'] = 1.0
+        logit = sm.Logit(y, X)
+        result = logit.fit()
+
+        # create dataframe of results
+        regression_results = pd.DataFrame()
+        regression_results['odds_ratio'] = np.exp(result.params)
+        regression_results['lower_bound'] = np.exp(result.conf_int()[0])
+        regression_results['upper_bound'] = np.exp(result.conf_int()[1])
+        regression_results['p_value'] = result.pvalues
+
+        return regression_results
+
+    def _format_odds_ratio(self, row):
+        return '{0:.2f} ({1:.2f}-{2:.2f})'.format(row['odds_ratio'], row['lower_bound'], row['upper_bound'])
+
     def create_logistic_regression_table(self, null_columns=['zip_median_income']):
         """
         Runs a logistic regression on selected categorical and numerical features and prints out a formatted table
@@ -325,6 +347,8 @@ class TableGenerator:
         for col in null_columns:
             self.regression_data = self.regression_data[self.regression_data[col].notnull()]
 
+        y = self.regression_data[self._prediction_column]
+
         # creat matrix of training features
         self.training_features = pd.concat([pd.get_dummies(self.regression_data[col], prefix=col)
                                            for col in self._categorical_columns] +
@@ -334,24 +358,22 @@ class TableGenerator:
 
         # drop columns to allow for regression convergence
         self.training_features.drop(self._features_to_exclude, axis=1, inplace=True)
-        self.training_features['intercept'] = 1.0
 
-        # fit model
-        logit = sm.Logit(self.regression_data[self._prediction_column], self.training_features)
-        self.result = logit.fit()
+        raw_ors = {}
+        for feature in self.training_features.columns:
+            X = self.training_features[[feature]]
+            results = self._get_regression_results(X, y)
+            raw_ors[feature] = [self._format_odds_ratio(row)
+                                for index, row in results.iterrows()
+                                if index == feature][0]
 
-        # create dataframe of results
-        regression_results = pd.DataFrame()
-        regression_results['odds_ratio'] = np.exp(self.result.params)
-        regression_results['lower_bound'] = np.exp(self.result.conf_int()[0])
-        regression_results['upper_bound'] = np.exp(self.result.conf_int()[1])
-        regression_results['p_value'] = self.result.pvalues
-
+        full_regression_results = self._get_regression_results(X=self.training_features, y=y)
         # format data for regression table
         regression_table_data = []
-        for index, row in regression_results.iterrows():
+        for index, row in full_regression_results.iterrows():
             data_point = [index,
-                          '{0:.2f} ({1:.2f}-{2:.2f})'.format(row['odds_ratio'], row['lower_bound'], row['upper_bound']),
+                          raw_ors.get(index, ''),
+                          self._format_odds_ratio(row),
                           self._format_p_value(row['p_value'])]
             regression_table_data.append(data_point)
 
