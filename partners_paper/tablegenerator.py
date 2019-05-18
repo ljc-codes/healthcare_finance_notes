@@ -139,8 +139,7 @@ class TableGenerator:
         self._note_counts.columns = [self._patient_id_column, 'note_count']
 
         # get stats for both patients and notes
-        patient_stats = (self.notes_data.sort_values(self._prediction_column, ascending=False)
-                    .drop_duplicates(self._patient_id_column))
+        patient_stats = self.notes_data.sort_values(self._prediction_column, ascending=False).drop_duplicates(self._patient_id_column)
 
         print(tabulate([['Notes per Patient',
                          '{:.3f}'.format(self._note_counts['note_count'].mean()),
@@ -161,6 +160,16 @@ class TableGenerator:
                            for label, value in zip(race_value_counts.index.tolist(),
                                                    race_value_counts.tolist())])
         print(tabulate(table_data, headers=['', '% of Total']))
+
+
+    def create_stats_by_year_table(self):
+        tmp_df = pd.DataFrame()
+        self.notes_data['year'] = self.notes_data['note_data'].dt.year
+        tmp_df['proportion'] = self.notes_data.groupby(['year', 'subject_num'])['y_pred'].max().reset_index().groupby('year')['y_pred'].mean()
+        tmp_df['patients'] = self.notes_data.drop_duplicates(['year', 'subject_num']).size()
+        table_data = [[int(record['year']), int(record['patients']), '{:.2%}'.format(record['proprotion'])]
+                      for record in tmp_df.reset_index().to_dict(orient='records')]
+        print(tabulate, headers=['Year', '# of Patients', '% of Patients with Financial Notes'])
 
     def _format_p_value(self, p_value, num_comparisons=1):
         """
@@ -305,6 +314,8 @@ class TableGenerator:
         self.create_population_stats_table()
         print('\n')
         self.create_summary_table()
+        print('\n')
+        self.create_stats_by_year_table()
         print('\n')
         self.create_numerical_table()
         print('\n')
