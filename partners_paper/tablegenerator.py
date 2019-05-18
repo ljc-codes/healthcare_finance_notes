@@ -161,15 +161,14 @@ class TableGenerator:
                                                    race_value_counts.tolist())])
         print(tabulate(table_data, headers=['', '% of Total']))
 
-
     def create_stats_by_year_table(self):
         tmp_df = pd.DataFrame()
-        self.notes_data['year'] = self.notes_data['note_data'].dt.year
+        self.notes_data['year'] = self.notes_data['note_date'].dt.year
         tmp_df['proportion'] = self.notes_data.groupby(['year', 'subject_num'])['y_pred'].max().reset_index().groupby('year')['y_pred'].mean()
         tmp_df['patients'] = self.notes_data.drop_duplicates(['year', 'subject_num']).size()
         table_data = [[int(record['year']), int(record['patients']), '{:.2%}'.format(record['proprotion'])]
                       for record in tmp_df.reset_index().to_dict(orient='records')]
-        print(tabulate, headers=['Year', '# of Patients', '% of Patients with Financial Notes'])
+        print(tabulate(table_data, headers=['Year', '# of Patients', '% of Patients with Financial Notes']))
 
     def _format_p_value(self, p_value, num_comparisons=1):
         """
