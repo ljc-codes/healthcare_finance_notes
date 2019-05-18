@@ -166,7 +166,7 @@ class TableGenerator:
         self.notes_data['year'] = self.notes_data['note_date'].dt.year
         tmp_df['proportion'] = self.notes_data.groupby(['year', 'subject_num'])['y_pred'].max().reset_index().groupby('year')['y_pred'].mean()
         tmp_df['patients'] = self.notes_data.drop_duplicates(['year', 'subject_num']).groupby('year').size()
-        table_data = [[int(record['year']), int(record['patients']), '{:.2%}'.format(record['proprotion'])]
+        table_data = [[int(record['year']), int(record['patients']), '{:.2%}'.format(record['proportion'])]
                       for record in tmp_df.reset_index().to_dict(orient='records')]
         print(tabulate(table_data, headers=['Year', '# of Patients', '% of Patients with Financial Notes']))
 
