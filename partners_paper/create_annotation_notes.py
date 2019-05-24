@@ -39,7 +39,7 @@ def create_note_set(
     df['financial_snippet'] = df['note_text'].map(_get_text_snippet)
     df = df.sample(n=notes_to_sample, random_state=42)
     print(df.shape)
-    df.to_csv(output_path)
+    df.to_csv(output_path, index=False)
 
 
 if __name__ == '__main__':
