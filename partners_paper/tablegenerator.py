@@ -164,9 +164,19 @@ class TableGenerator:
     def create_stats_by_year_table(self):
         tmp_df = pd.DataFrame()
         self.notes_data['year'] = self.notes_data['note_date'].dt.year
-        tmp_df['proportion'] = self.notes_data.groupby(['year', 'subject_num'])['y_pred'].max().reset_index().groupby('year')['y_pred'].mean()
-        tmp_df['patients'] = self.notes_data.drop_duplicates(['year', 'subject_num']).groupby('year').size()
-        table_data = [[int(record['year']), '{:,}'.format(int(record['patients'])), '{:.2%}'.format(record['proportion'])]
+
+        tmp_dates_merge = (self.notes_data.sort_values('note_date')
+                           .drop_duplicates('subject_num')[['note_date', 'subject_num']])
+        tmp_patients_by_year = (self.notes_data
+                                .groupby('subject_num')['y_pred']
+                                .max()
+                                .reset_index()
+                                .merge(tmp_dates_merge, on='subject_num', how='left'))
+        tmp_df['proportion'] = tmp_patients_by_year.groupby('year')['y_pred'].mean()
+        tmp_df['patients'] = tmp_patients_by_year.groupby('year').size()
+        table_data = [[int(record['year']),
+                       '{:,}'.format(int(record['patients'])),
+                       '{:.2%}'.format(record['proportion'])]
                       for record in tmp_df.reset_index().to_dict(orient='records')]
         print(tabulate(table_data, headers=['Year', '# of Patients', '% of Patients with Financial Notes']))
 
