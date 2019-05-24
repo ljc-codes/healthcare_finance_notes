@@ -31,12 +31,15 @@ def create_note_set(
                                                                        on=['subject_num', 'note_id'],
                                                                        how='left')
     df = df[['note_id', 'subject_num', 'note_text']]
+
+    # remove commas for csv saving
+    df['note_text'] = df['note_text'].map(lambda x: x.replace(',', ''))
     print(df.shape)
 
     df['financial_snippet'] = df['note_text'].map(_get_text_snippet)
     df = df.sample(n=notes_to_sample, random_state=42)
     print(df.shape)
-    df.to_json(output_path, orient='records', lines=True)
+    df.to_csv(output_path)
 
 
 if __name__ == '__main__':
@@ -60,7 +63,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--output_path',
                         '-o',
-                        default='financial_notes_snippets.jsonl',
+                        default='financial_notes_snippets.csv',
                         type=str,
                         help='Path to output file')
 
