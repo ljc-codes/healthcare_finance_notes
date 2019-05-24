@@ -13,6 +13,7 @@ def _get_text_snippet(full_note_text,
             text_snippet = full_note_text[max(0, word_tag_index - text_window_before):
                                           min(len(full_note_text),
                                               word_tag_index + text_window_after)]
+            text_snippet = text_snippet.replace(word_tag, '**{}**'.format(word_tag))
             return text_snippet
 
 
