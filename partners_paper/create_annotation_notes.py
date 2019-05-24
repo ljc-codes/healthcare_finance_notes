@@ -6,7 +6,7 @@ from notetagger import constants
 def _get_text_snippet(full_note_text,
                       word_tags=constants.TAGS,
                       text_window_before=300,
-                      text_window_after=10):
+                      text_window_after=300):
     for word_tag in word_tags:
         word_tag_index = full_note_text.lower().find(word_tag.replace('_', ' '))
         if word_tag_index >= 0:
@@ -20,6 +20,7 @@ def create_note_set(
         predictions_path,
         notes_path,
         output_path,
+        notes_to_sample=500,
         threshold=0.8):
     predictions_data = pd.read_json(predictions_path, orient='records', lines=True)
     notes_data = pd.read_json(notes_path, orient='records', lines=True)
@@ -32,6 +33,8 @@ def create_note_set(
     print(df.shape)
 
     df['financial_snippet'] = df['note_text'].map(_get_text_snippet)
+    df = df.sample(n=notes_to_sample, random_state=42)
+    print(df.shape)
     df.to_json(output_path, orient='records', lines=True)
 
 
@@ -60,5 +63,14 @@ if __name__ == '__main__':
                         type=str,
                         help='Path to output file')
 
+    parser.add_argument('--notes_to_sample',
+                        '-s',
+                        default=500,
+                        type=int,
+                        help='Number of notes to randomly sample')
+
     args = parser.parse_args()
-    create_note_set(predictions_path=args.predictions_path, notes_path=args.notes_path, output_path=args.output_path)
+    create_note_set(predictions_path=args.predictions_path,
+                    notes_path=args.notes_path,
+                    output_path=args.output_path,
+                    notes_to_sample=args.notes_to_sample)
