@@ -166,7 +166,7 @@ class TableGenerator:
         self.notes_data['year'] = self.notes_data['note_date'].dt.year
 
         tmp_dates_merge = (self.notes_data.sort_values('note_date')
-                           .drop_duplicates('subject_num')[['note_date', 'subject_num']])
+                           .drop_duplicates('subject_num')[['year', 'subject_num']])
         tmp_patients_by_year = (self.notes_data
                                 .groupby('subject_num')['y_pred']
                                 .max()
